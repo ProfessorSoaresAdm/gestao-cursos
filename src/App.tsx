@@ -10,6 +10,7 @@ import PagamentosPage from '@/modules/pagamentos/PagamentosPage';
 import ProfessoresPage from '@/modules/professores/ProfessoresPage';
 import PessoalPage from '@/modules/pessoal/PessoalPage';
 import UsuariosPage from '@/modules/usuarios/UsuariosPage';
+import BackupPage from '@/modules/backup/BackupPage';
 import { Toaster } from '@/components/ui/sonner';
 
 // CRÍTICO: estas configurações evitam instabilidade ao trocar de aba (da skill auth-login-stability)
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="professores" element={<ProfessoresPage />} />
             <Route path="pessoal" element={<PessoalPage />} />
             <Route path="usuarios" element={<UsuariosPage />} />
+            <Route path="backup" element={<BackupPage />} />
           </Route>
 
           {/* Catch-all route */}

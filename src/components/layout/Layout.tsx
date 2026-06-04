@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { BackupReminderModal } from '@/components/shared/BackupReminderModal';
 
 export function Layout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -17,6 +18,9 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Lembrete Automático de Segurança */}
+      <BackupReminderModal />
     </div>
   );
 }
