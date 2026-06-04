@@ -13,6 +13,17 @@ import type { Database } from '@/types/database';
 
 type PessoalRow = Database['public']['Tables']['pessoal']['Row'];
 
+const safeFormatDate = (dateStr: string | null | undefined) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  try {
+    return format(d, 'dd/MM/yyyy');
+  } catch (e) {
+    return '';
+  }
+};
+
 export default function PessoalPage() {
   const { pessoal, loading: pessoalLoading, error, create, update } = usePessoal();
   const { role, loading: authLoading } = useAuth();
@@ -50,7 +61,7 @@ export default function PessoalPage() {
 
   const filteredPessoal = useMemo(() => {
     return pessoal.filter(p => {
-      const matchNome = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchNome = (p.nome || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchStatus = 
         statusFilter === 'todos' ? true : 
         statusFilter === 'ativos' ? p.status === 'ativo' : 
@@ -85,8 +96,8 @@ export default function PessoalPage() {
     Email: p.email || '',
     Telefone: p.telefone || '',
     Documento: p.documento || '',
-    DataAdmissao: p.data_admissao ? format(parseISO(p.data_admissao), 'dd/MM/yyyy') : '',
-    DataDemissao: p.data_demissao ? format(parseISO(p.data_demissao), 'dd/MM/yyyy') : '',
+    DataAdmissao: safeFormatDate(p.data_admissao),
+    DataDemissao: safeFormatDate(p.data_demissao),
     Status: p.status === 'ativo' ? 'Ativo' : 'Desligado',
     Observacoes: p.observacoes || ''
     // Salário propositalmente omitido do CSV por segurança
@@ -186,7 +197,7 @@ export default function PessoalPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-slate-300 text-sm">
-                    {funcionario.data_admissao ? format(parseISO(funcionario.data_admissao), 'dd/MM/yyyy') : '-'}
+                    {safeFormatDate(funcionario.data_admissao) || '-'}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={funcionario.status || 'ativo'} ativo={funcionario.status === 'ativo'} />
