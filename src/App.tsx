@@ -2,7 +2,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthGuard } from '@/auth/AuthGuard';
 import LoginPage from '@/auth/LoginPage';
-import Dashboard from '@/pages/Dashboard';
+import { Layout } from '@/components/layout/Layout';
+
+// Pages
+import AulasPage from '@/modules/aulas/AulasPage';
+import PagamentosPage from '@/modules/pagamentos/PagamentosPage';
+import ProfessoresPage from '@/modules/professores/ProfessoresPage';
+import PessoalPage from '@/modules/pessoal/PessoalPage';
 
 // CRÍTICO: estas configurações evitam instabilidade ao trocar de aba (da skill auth-login-stability)
 const queryClient = new QueryClient({
@@ -25,17 +31,31 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
+          {/* Rotas Privadas encapsuladas pelo Layout */}
           <Route
-            path="/dashboard"
+            path="/"
             element={
               <AuthGuard>
-                <Dashboard />
+                <Layout />
               </AuthGuard>
             }
-          />
+          >
+            <Route index element={<Navigate to="/aulas" replace />} />
+            <Route path="aulas" element={<AulasPage />} />
+            <Route path="pagamentos" element={<PagamentosPage />} />
+            <Route path="professores" element={<ProfessoresPage />} />
+            <Route 
+              path="pessoal" 
+              element={
+                <AuthGuard requireAdmin={true}>
+                  <PessoalPage />
+                </AuthGuard>
+              } 
+            />
+          </Route>
 
-          {/* Redirecionar raiz para dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Catch-all route */}
+          <Route path="*" element={<Navigate to="/aulas" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
