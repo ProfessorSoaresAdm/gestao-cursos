@@ -2,14 +2,15 @@ import React, { useState, useMemo } from 'react';
 import { useAulas } from '@/hooks/useAulas';
 import { useProfessores } from '@/hooks/useProfessores';
 import { useAuth } from '@/auth/useAuth';
-import { format, isSameMonth, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AulaForm } from './AulaForm';
+import { ImportModal } from '@/components/shared/ImportModal';
 import { ExportButton } from '@/components/shared/ExportButton';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Edit2, CheckCircle, XCircle, Upload } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import {
@@ -25,7 +26,7 @@ import {
 import type { AulaWithProfessor } from './aulaService';
 
 export default function AulasPage() {
-  const { aulas, loading, error, create, update, updateStatus } = useAulas();
+  const { aulas, loading, error, create, update, updateStatus, insertMany } = useAulas();
   const { professores } = useProfessores(); // Para o filtro de professores
   const { role } = useAuth();
   
@@ -35,6 +36,7 @@ export default function AulasPage() {
   const [mesFilter, setMesFilter] = useState<string>(''); // Formato YYYY-MM
   
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingAula, setEditingAula] = useState<AulaWithProfessor | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -98,6 +100,54 @@ export default function AulasPage() {
     });
   };
 
+  const handleImport = async (data: any[]) => {
+    try {
+      const inserts = data.map(row => {
+        let professor_id = null;
+        if (row['Nome do Professor']) {
+          const prof = professores.find(p => p.nome.toLowerCase() === String(row['Nome do Professor']).trim().toLowerCase());
+          if (!prof) {
+            throw new Error(`Professor não encontrado: "${row['Nome do Professor']}". Certifique-se de que o nome está idêntico ao cadastrado.`);
+          }
+          professor_id = prof.id;
+        }
+
+        let duracao = 60;
+        if (row['Duracao']) {
+          const parsed = parseInt(String(row['Duracao']), 10);
+          if (!isNaN(parsed)) duracao = parsed;
+        }
+
+        const dataStr = row['DataHora'];
+        if (!dataStr) throw new Error("A coluna 'DataHora' é obrigatória (ex: 2026-10-15T14:30).");
+        
+        let dataHoraFinal = dataStr;
+        try {
+          dataHoraFinal = new Date(dataStr).toISOString();
+        } catch(e) {
+          throw new Error(`Data inválida: "${dataStr}". Use o formato AAAA-MM-DDTHH:MM (ex: 2026-10-15T14:30)`);
+        }
+        
+        return {
+          professor_id,
+          titulo: row['Titulo'] || 'Aula importada',
+          descricao: null,
+          data_hora: dataHoraFinal,
+          duracao_minutos: duracao,
+          link_transmissao: row['Link'] || null,
+          status: row['Status'] === 'realizada' ? 'realizada' : row['Status'] === 'cancelada' ? 'cancelada' : 'agendada'
+        };
+      });
+
+      if (inserts.length === 0) throw new Error("Nenhum dado válido encontrado.");
+      
+      await insertMany(inserts);
+      toast.success(`${inserts.length} aulas importadas com sucesso!`);
+    } catch(err:any) {
+      throw new Error(err.message);
+    }
+  };
+
   const exportColumns = [
     { key: 'titulo', label: 'Título' },
     { key: 'professores.nome', label: 'Professor', format: (val: any) => val || 'Sem professor' },
@@ -141,10 +191,16 @@ export default function AulasPage() {
             className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
           />
           {canWrite && (
-            <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Aula
-            </Button>
+            <>
+              <Button onClick={() => setIsImportOpen(true)} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200">
+                <Upload className="w-4 h-4 mr-2" />
+                Importar
+              </Button>
+              <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Aula
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -286,6 +342,20 @@ export default function AulasPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        title="Importar Aulas"
+        instructions={[
+          "Salve sua planilha Excel como formato CSV (UTF-8).",
+          "A coluna 'Nome do Professor' deve ter o nome EXATAMENTE igual ao cadastrado no sistema, caso contrário a importação será rejeitada.",
+          "A coluna 'DataHora' é obrigatória no padrão ISO: YYYY-MM-DDTHH:MM (ex: 2026-12-01T15:30).",
+          "Status aceitos: agendada, realizada, cancelada."
+        ]}
+        expectedColumns={['Nome do Professor', 'Titulo', 'DataHora', 'Duracao', 'Status', 'Link']}
+        onImport={handleImport}
+      />
 
       <AulaForm 
         open={isFormOpen} 

@@ -40,6 +40,16 @@ export const professorService = {
     return result;
   },
 
+  async insertMany(data: Omit<ProfessorInsert, 'id' | 'criado_em' | 'atualizado_em'>[]): Promise<ProfessorRow[]> {
+    const { data: result, error } = await supabase
+      .from('professores')
+      .insert(data)
+      .select();
+      
+    if (error) throw new Error(`Erro ao importar professores: ${error.message}`);
+    return result;
+  },
+
   async update(id: string, data: Partial<ProfessorUpdate>): Promise<ProfessorRow> {
     const { data: result, error } = await supabase
       .from('professores')

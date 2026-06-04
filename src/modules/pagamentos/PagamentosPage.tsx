@@ -1,14 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { usePagamentos } from '@/hooks/usePagamentos';
+import { useProfessores } from '@/hooks/useProfessores';
 import { useAuth } from '@/auth/useAuth';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PagamentoForm } from './PagamentoForm';
 import { ExportButton } from '@/components/shared/ExportButton';
+import { ImportModal } from '@/components/shared/ImportModal';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, Ban, CheckCircle, DollarSign } from 'lucide-react';
+import { Plus, Search, Edit2, Ban, CheckCircle2, DollarSign, Upload } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import {
@@ -23,14 +25,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import type { PagamentoWithRelations } from './pagamentoService';
+import type { PagamentoWithProfessor } from './pagamentoService';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
 export default function PagamentosPage() {
-  const { pagamentos, loading, error, create, update, cancelar, marcarPago } = usePagamentos();
+  const { pagamentos, loading: pagamentosLoading, error, create, update, cancelar, marcarPago, insertMany } = usePagamentos();
+  const { professores, loading: profLoading } = useProfessores();
   const { role } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,7 +41,8 @@ export default function PagamentosPage() {
   const [mesFilter, setMesFilter] = useState<string>(''); // YYYY-MM
   
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingPagamento, setEditingPagamento] = useState<PagamentoWithRelations | null>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [editingPagamento, setEditingPagamento] = useState<PagamentoWithProfessor | null>(null);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -55,6 +59,7 @@ export default function PagamentosPage() {
   const [quickPayData, setQuickPayData] = useState({ data: format(new Date(), 'yyyy-MM-dd'), metodo: 'pix' });
 
   const canWrite = role === 'admin' || role === 'editor';
+  const loading = pagamentosLoading || profLoading;
 
   const filteredPagamentos = useMemo(() => {
     return pagamentos.filter(p => {
@@ -90,7 +95,7 @@ export default function PagamentosPage() {
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (pagamento: PagamentoWithRelations) => {
+  const handleOpenEdit = (pagamento: PagamentoWithProfessor) => {
     setEditingPagamento(pagamento);
     setIsFormOpen(true);
   };
@@ -122,20 +127,67 @@ export default function PagamentosPage() {
     }
   };
 
-  const handleCancelPagamento = async (id: string) => {
+  const handleCancel = async (pagamento: PagamentoWithProfessor) => {
     setConfirmDialog({
       isOpen: true,
       title: 'Cancelar Pagamento',
       description: 'Tem certeza que deseja cancelar este registro de pagamento? A ação poderá ser revertida alterando o status novamente.',
       action: async () => {
         try {
-          await cancelar(id);
+          await cancelar(pagamento.id);
           toast.success('Pagamento cancelado com sucesso.');
         } catch (err: any) {
           toast.error(`Erro ao cancelar pagamento: ${err.message}`);
         }
       }
     });
+  };
+
+  const handleImport = async (data: any[]) => {
+    try {
+      const inserts = data.map(row => {
+        let professor_id = null;
+        if (row['Nome do Professor']) {
+          const prof = professores.find(p => p.nome.toLowerCase() === String(row['Nome do Professor']).trim().toLowerCase());
+          if (!prof) {
+            throw new Error(`Professor não encontrado: "${row['Nome do Professor']}". Certifique-se de que o nome está idêntico ao cadastrado.`);
+          }
+          professor_id = prof.id;
+        }
+
+        let valor = 0;
+        if (row['Valor']) {
+          const parsed = parseFloat(String(row['Valor']).replace(/[^0-9.-]+/g, ""));
+          if (!isNaN(parsed)) valor = parsed;
+        }
+
+        const vencStr = row['Vencimento'];
+        if (!vencStr) throw new Error("A coluna 'Vencimento' é obrigatória (formato YYYY-MM-DD).");
+        
+        let dataVenc = vencStr;
+        try {
+          dataVenc = new Date(vencStr).toISOString().split('T')[0];
+        } catch(e) {
+          throw new Error(`Data inválida: "${vencStr}". Use o formato AAAA-MM-DD (ex: 2026-12-01)`);
+        }
+        
+        return {
+          professor_id,
+          descricao: row['Descricao'] || 'Pagamento importado',
+          valor,
+          data_vencimento: dataVenc,
+          status: row['Status'] === 'pago' ? 'pago' : row['Status'] === 'cancelado' ? 'cancelado' : 'pendente',
+          metodo: row['Metodo'] || null
+        };
+      });
+
+      if (inserts.length === 0) throw new Error("Nenhum dado válido encontrado.");
+      
+      await insertMany(inserts);
+      toast.success(`${inserts.length} pagamentos importados com sucesso!`);
+    } catch(err:any) {
+      throw new Error(err.message);
+    }
   };
 
   const exportColumns = [
@@ -174,18 +226,24 @@ export default function PagamentosPage() {
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-          <ExportButton 
-            data={filteredPagamentos} 
-            filename="pagamentos" 
-            columns={exportColumns}
-            className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
-          />
-          {canWrite && (
-            <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Pagamento
-            </Button>
-          )}
+            <ExportButton 
+              data={filteredPagamentos}
+              filename="pagamentos"
+              columns={exportColumns}
+              className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
+            />
+            {canWrite && (
+              <>
+                <Button onClick={() => setIsImportOpen(true)} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Importar
+                </Button>
+                <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Pagamento
+                </Button>
+              </>
+            )}
         </div>
       </div>
 
@@ -298,7 +356,7 @@ export default function PagamentosPage() {
                             className="text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10"
                             title="Marcar como Pago"
                           >
-                            <CheckCircle className="w-4 h-4" />
+                            <CheckCircle2 className="w-4 h-4" />
                           </Button>
                         )}
                         <Button 
@@ -348,6 +406,21 @@ export default function PagamentosPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <ImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        title="Importar Pagamentos"
+        instructions={[
+          "Salve sua planilha Excel como formato CSV (UTF-8).",
+          "A coluna 'Nome do Professor' deve ter o nome EXATAMENTE igual ao cadastrado no sistema (pode deixar vazio para contas gerais).",
+          "A coluna 'Vencimento' é obrigatória (ex: 2026-12-01).",
+          "Valor deve ser numérico (ex: 1500.50).",
+          "Status aceitos: pendente, pago, cancelado."
+        ]}
+        expectedColumns={['Nome do Professor', 'Descricao', 'Valor', 'Vencimento', 'Status', 'Metodo']}
+        onImport={handleImport}
+      />
+      
       <PagamentoForm 
         open={isFormOpen} 
         onOpenChange={setIsFormOpen} 

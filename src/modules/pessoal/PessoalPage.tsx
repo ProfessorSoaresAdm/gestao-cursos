@@ -3,11 +3,12 @@ import { usePessoal } from '@/hooks/usePessoal';
 import { useAuth } from '@/auth/useAuth';
 import { format, parseISO } from 'date-fns';
 import { PessoalForm } from './PessoalForm';
+import { ImportModal } from '@/components/shared/ImportModal';
 import { ExportButton } from '@/components/shared/ExportButton';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, ShieldAlert, Power } from 'lucide-react';
+import { Plus, Search, Edit2, ShieldAlert, Power, Upload } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import {
@@ -36,13 +37,14 @@ const safeFormatDate = (dateStr: string | null | undefined) => {
 };
 
 export default function PessoalPage() {
-  const { pessoal, loading: pessoalLoading, error, create, update } = usePessoal();
+  const { pessoal, loading: pessoalLoading, error, create, update, insertMany } = usePessoal();
   const { role, loading: authLoading } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'todos' | 'ativos' | 'inativos'>('todos');
   
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingFuncionario, setEditingFuncionario] = useState<PessoalRow | null>(null);
 
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -99,6 +101,49 @@ export default function PessoalPage() {
         }
       }
     });
+  };
+
+  const handleImport = async (data: any[]) => {
+    try {
+      const inserts = data.map(row => {
+        let salario: number | null = null;
+        if (row['Salario']) {
+          const parsed = parseFloat(String(row['Salario']).replace(/[^0-9.-]+/g, ""));
+          if (!isNaN(parsed)) salario = parsed;
+        }
+        
+        let data_admissao: string | null = null;
+        if (row['DataAdmissao']) {
+          // simple check for yyyy-mm-dd or dd/mm/yyyy. Try to keep simple ISO string parsing if possible.
+          try {
+            const parts = String(row['DataAdmissao']).split('/');
+            if (parts.length === 3) {
+              data_admissao = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            } else {
+              data_admissao = new Date(row['DataAdmissao']).toISOString().split('T')[0];
+            }
+          } catch(e) {}
+        }
+
+        return {
+          nome: row['Nome'] || '',
+          cargo: row['Cargo'] || null,
+          email: row['Email'] || null,
+          telefone: row['Telefone'] || null,
+          documento: row['Documento'] || null,
+          salario,
+          data_admissao,
+          status: 'ativo'
+        };
+      }).filter(row => row.nome.trim() !== '');
+
+      if (inserts.length === 0) throw new Error("Nenhum dado válido encontrado para importar.");
+      
+      await insertMany(inserts);
+      toast.success(`${inserts.length} funcionários importados com sucesso!`);
+    } catch(err:any) {
+      throw new Error(`Falha na importação: ${err.message}`);
+    }
   };
 
   const exportColumns = [
@@ -168,16 +213,19 @@ export default function PessoalPage() {
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-          <ExportButton 
-            data={filteredPessoal} 
-            filename="pessoal_rh" 
-            columns={exportColumns}
-            className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
-          />
-          <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Funcionário
-          </Button>
+            <ExportButton 
+              data={filteredPessoal}
+              filename="pessoal"
+              columns={exportColumns}
+            />
+            <Button onClick={() => setIsImportOpen(true)} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200">
+              <Upload className="w-4 h-4 mr-2" />
+              Importar
+            </Button>
+            <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Colaborador
+            </Button>
         </div>
       </div>
 
@@ -288,6 +336,21 @@ export default function PessoalPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        title="Importar Pessoal"
+        instructions={[
+          "Salve sua planilha Excel como formato CSV (UTF-8).",
+          "Mantenha a primeira linha exatamente com os nomes das colunas esperadas.",
+          "Para o salário, use apenas números e ponto decimal (ex: 2500.50).",
+          "DataAdmissao deve estar no formato DD/MM/YYYY ou YYYY-MM-DD.",
+          "O campo 'Nome' é obrigatório, os demais são opcionais."
+        ]}
+        expectedColumns={['Nome', 'Cargo', 'Email', 'Telefone', 'Documento', 'DataAdmissao', 'Salario']}
+        onImport={handleImport}
+      />
 
       <PessoalForm 
         open={isFormOpen} 

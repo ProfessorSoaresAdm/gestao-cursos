@@ -2,11 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { useProfessores } from '@/hooks/useProfessores';
 import { useAuth } from '@/auth/useAuth';
 import { ProfessorForm } from './ProfessorForm';
+import { ImportModal } from '@/components/shared/ImportModal';
 import { ExportButton } from '@/components/shared/ExportButton';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, Ban, CheckCircle2 } from 'lucide-react';
+import { Plus, Search, Edit2, Ban, CheckCircle2, Upload } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import {
@@ -24,13 +25,14 @@ import type { Database } from '@/types/database';
 type Professor = Database['public']['Tables']['professores']['Row'];
 
 export default function ProfessoresPage() {
-  const { professores, loading, error, create, update, toggleAtivo } = useProfessores();
+  const { professores, loading, error, create, update, toggleAtivo, insertMany } = useProfessores();
   const { role } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'todos' | 'ativos' | 'inativos'>('todos');
   
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProfessor, setEditingProfessor] = useState<Professor | null>(null);
 
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -43,6 +45,26 @@ export default function ProfessoresPage() {
   });
 
   const canWrite = role === 'admin' || role === 'editor';
+
+  const handleImport = async (data: any[]) => {
+    try {
+      const inserts = data.map(row => ({
+        nome: row['Nome'] || '',
+        email: row['Email'] || null,
+        telefone: row['Telefone'] || null,
+        especialidade: row['Especialidade'] || null,
+        documento: row['Documento'] || null,
+        ativo: true
+      })).filter(row => row.nome.trim() !== '');
+
+      if (inserts.length === 0) throw new Error("Nenhum dado válido encontrado para importar.");
+      
+      await insertMany(inserts);
+      toast.success(`${inserts.length} professores importados com sucesso!`);
+    } catch (err: any) {
+      throw new Error(`Falha na importação: ${err.message}`);
+    }
+  };
 
   const exportColumns = [
     { key: 'nome', label: 'Nome' },
@@ -131,10 +153,16 @@ export default function ProfessoresPage() {
             className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
           />
           {canWrite && (
-            <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Professor
-            </Button>
+            <>
+              <Button onClick={() => setIsImportOpen(true)} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200">
+                <Upload className="w-4 h-4 mr-2" />
+                Importar
+              </Button>
+              <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Professor
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -246,6 +274,19 @@ export default function ProfessoresPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        title="Importar Professores"
+        instructions={[
+          "Salve sua planilha Excel como formato CSV (UTF-8).",
+          "Mantenha a primeira linha exatamente com os nomes das colunas esperadas.",
+          "O campo 'Nome' é obrigatório, os demais são opcionais."
+        ]}
+        expectedColumns={['Nome', 'Email', 'Telefone', 'Especialidade', 'Documento']}
+        onImport={handleImport}
+      />
 
       <ProfessorForm 
         open={isFormOpen} 

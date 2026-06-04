@@ -38,6 +38,17 @@ export function useAulas() {
     }
   };
 
+  const insertMany = async (data: Omit<AulaInsert, 'id' | 'criado_em' | 'atualizado_em'>[]) => {
+    try {
+      setError(null);
+      await aulaService.insertMany(data);
+      await fetchAll();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const update = async (id: string, data: Partial<AulaUpdate>) => {
     try {
       setError(null);
@@ -66,6 +77,7 @@ export function useAulas() {
     error,
     fetchAll,
     create,
+    insertMany,
     update,
     updateStatus,
   };

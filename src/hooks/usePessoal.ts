@@ -39,6 +39,17 @@ export function usePessoal() {
     }
   };
 
+  const insertMany = async (data: Omit<PessoalInsert, 'id' | 'criado_em' | 'atualizado_em'>[]) => {
+    try {
+      setError(null);
+      await pessoalService.insertMany(data);
+      await fetchAll();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const update = async (id: string, data: Partial<PessoalUpdate>) => {
     try {
       setError(null);
@@ -67,6 +78,7 @@ export function usePessoal() {
     error,
     fetchAll,
     create,
+    insertMany,
     update,
     updateStatus,
   };

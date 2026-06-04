@@ -39,6 +39,17 @@ export function useProfessores() {
     }
   };
 
+  const insertMany = async (data: Omit<ProfessorInsert, 'id' | 'criado_em' | 'atualizado_em'>[]) => {
+    try {
+      setError(null);
+      await professorService.insertMany(data);
+      await fetchAll();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const update = async (id: string, data: Partial<ProfessorUpdate>) => {
     try {
       setError(null);
@@ -67,6 +78,7 @@ export function useProfessores() {
     error,
     fetchAll,
     create,
+    insertMany,
     update,
     toggleAtivo,
   };

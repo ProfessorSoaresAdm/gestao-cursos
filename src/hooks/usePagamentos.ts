@@ -54,6 +54,17 @@ export function usePagamentos() {
     }
   };
 
+  const insertMany = async (data: Omit<PagamentoInsert, 'id' | 'criado_em' | 'atualizado_em'>[]) => {
+    try {
+      setError(null);
+      await pagamentoService.insertMany(data);
+      await fetchAll();
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const update = async (id: string, data: Partial<PagamentoUpdate>) => {
     try {
       setError(null);
@@ -93,6 +104,7 @@ export function usePagamentos() {
     error,
     fetchAll,
     create,
+    insertMany,
     update,
     marcarPago,
     cancelar,

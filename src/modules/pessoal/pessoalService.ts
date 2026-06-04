@@ -40,6 +40,16 @@ export const pessoalService = {
     return result;
   },
 
+  async insertMany(data: Omit<PessoalInsert, 'id' | 'criado_em' | 'atualizado_em'>[]): Promise<PessoalRow[]> {
+    const { data: result, error } = await supabase
+      .from('pessoal')
+      .insert(data)
+      .select();
+      
+    if (error) throw new Error(`Erro ao importar dados de pessoal: ${error.message}`);
+    return result;
+  },
+
   async update(id: string, data: Partial<PessoalUpdate>): Promise<PessoalRow> {
     const { data: result, error } = await supabase
       .from('pessoal')

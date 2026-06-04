@@ -53,6 +53,16 @@ export const pagamentoService = {
     return result;
   },
 
+  async insertMany(data: Omit<PagamentoInsert, 'id' | 'criado_em' | 'atualizado_em'>[]): Promise<PagamentoRow[]> {
+    const { data: result, error } = await supabase
+      .from('pagamentos')
+      .insert(data)
+      .select();
+      
+    if (error) throw new Error(`Erro ao importar pagamentos: ${error.message}`);
+    return result;
+  },
+
   async update(id: string, data: Partial<PagamentoUpdate>): Promise<PagamentoRow> {
     const { data: result, error } = await supabase
       .from('pagamentos')

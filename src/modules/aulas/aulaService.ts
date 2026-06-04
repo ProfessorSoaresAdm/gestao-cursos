@@ -57,6 +57,16 @@ export const aulaService = {
     return result;
   },
 
+  async insertMany(data: Omit<AulaInsert, 'id' | 'criado_em' | 'atualizado_em'>[]): Promise<AulaRow[]> {
+    const { data: result, error } = await supabase
+      .from('aulas')
+      .insert(data)
+      .select();
+      
+    if (error) throw new Error(`Erro ao importar aulas: ${error.message}`);
+    return result;
+  },
+
   async update(id: string, data: Partial<AulaUpdate>): Promise<AulaRow> {
     const { data: result, error } = await supabase
       .from('aulas')
