@@ -148,7 +148,7 @@ export default function PagamentosPage() {
           <p className="text-slate-400 mt-1">Controle financeiro, recebimentos e inadimplências.</p>
         </div>
         
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <ExportButton 
             data={exportData} 
             filename="pagamentos" 

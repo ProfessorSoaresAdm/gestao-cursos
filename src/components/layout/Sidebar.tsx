@@ -41,7 +41,7 @@ export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
           <span className="text-xl font-bold text-slate-100">Controle</span>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <nav className="flex-1 min-h-0 overflow-y-auto py-4 px-3 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -63,7 +63,7 @@ export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800 lg:hidden">
+        <div className="p-4 border-t border-slate-800 lg:hidden shrink-0">
           <Button 
             variant="ghost" 
             className="w-full justify-start text-slate-400 hover:text-slate-200 hover:bg-slate-800"
@@ -75,7 +75,7 @@ export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
         </div>
 
         {/* Footer with "Desenvolvido por AndreSD" */}
-        <div className="p-4 border-t border-slate-800 text-center text-xs text-slate-500 mt-auto">
+        <div className="p-4 border-t border-slate-800 text-center text-xs text-slate-500 mt-auto shrink-0">
           Desenvolvido por <a href="https://wa.me/5512982176890" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors">AndreSD</a>
         </div>
       </aside>

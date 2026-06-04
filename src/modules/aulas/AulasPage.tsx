@@ -110,7 +110,7 @@ export default function AulasPage() {
           <p className="text-slate-400 mt-1">Gerenciamento de grade e sessões ao vivo.</p>
         </div>
         
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <ExportButton 
             data={exportData} 
             filename="aulas" 

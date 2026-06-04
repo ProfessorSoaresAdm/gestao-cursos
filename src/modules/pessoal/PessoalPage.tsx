@@ -132,7 +132,7 @@ export default function PessoalPage() {
           <p className="text-slate-400 mt-1">Cadastro e contratos da equipe operacional e administrativa.</p>
         </div>
         
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <ExportButton 
             data={exportData} 
             filename="pessoal_rh" 
