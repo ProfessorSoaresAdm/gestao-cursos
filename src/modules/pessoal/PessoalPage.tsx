@@ -64,19 +64,17 @@ export default function PessoalPage() {
     }
   };
 
-  // Prepara dados para o ExportButton, OMITINDO explicitamente o salário
-  const exportData = filteredPessoal.map(p => ({
-    Nome: p.nome,
-    Cargo: p.cargo || '',
-    Email: p.email || '',
-    Telefone: p.telefone || '',
-    Documento: p.documento || '',
-    DataAdmissao: safeFormatDate(p.data_admissao),
-    DataDemissao: safeFormatDate(p.data_demissao),
-    Status: p.status === 'ativo' ? 'Ativo' : 'Desligado',
-    Observacoes: p.observacoes || ''
-    // Salário propositalmente omitido do CSV por segurança
-  }));
+  const exportColumns = [
+    { key: 'nome', label: 'Nome' },
+    { key: 'cargo', label: 'Cargo', format: (val: any) => val || '' },
+    { key: 'email', label: 'Email', format: (val: any) => val || '' },
+    { key: 'telefone', label: 'Telefone', format: (val: any) => val || '' },
+    { key: 'documento', label: 'Documento', format: (val: any) => val || '' },
+    { key: 'data_admissao', label: 'DataAdmissao', format: (val: any) => safeFormatDate(val) },
+    { key: 'data_demissao', label: 'DataDemissao', format: (val: any) => safeFormatDate(val) },
+    { key: 'status', label: 'Status', format: (val: any) => val === 'ativo' ? 'Ativo' : 'Desligado' },
+    { key: 'observacoes', label: 'Observacoes', format: (val: any) => val || '' }
+  ];
 
   if (authLoading) {
     return (
@@ -134,8 +132,9 @@ export default function PessoalPage() {
         
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <ExportButton 
-            data={exportData} 
+            data={filteredPessoal} 
             filename="pessoal_rh" 
+            columns={exportColumns}
             className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
           />
           <Button onClick={handleOpenCreate} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700">

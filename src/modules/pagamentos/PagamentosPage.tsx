@@ -43,10 +43,9 @@ export default function PagamentosPage() {
       
       let matchMes = true;
       if (mesFilter && p.data_vencimento) {
-        const pDate = new Date(p.data_vencimento);
+        const [pYear, pMonth] = p.data_vencimento.split('-');
         const [year, month] = mesFilter.split('-');
-        // Convert dates to absolute numbers for simple comparison or just use parts
-        matchMes = pDate.getFullYear() === parseInt(year) && pDate.getMonth() === (parseInt(month) - 1);
+        matchMes = pYear === year && pMonth === month;
       }
 
       return matchDesc && matchStatus && matchMes;
@@ -112,16 +111,15 @@ export default function PagamentosPage() {
     }
   };
 
-  const exportData = filteredPagamentos.map(p => ({
-    Descricao: p.descricao,
-    Professor: p.professores?.nome || '',
-    Aula: p.aulas?.titulo || '',
-    Valor: p.valor,
-    Vencimento: p.data_vencimento ? format(parseISO(p.data_vencimento), 'dd/MM/yyyy') : '',
-    Status: p.status,
-    DataPagamento: p.data_pagamento ? format(parseISO(p.data_pagamento), 'dd/MM/yyyy') : '',
-    Metodo: p.metodo || ''
-  }));
+  const exportColumns = [
+    { key: 'descricao', label: 'Descrição' },
+    { key: 'professores.nome', label: 'Professor', format: (val: any) => val || 'Geral' },
+    { key: 'valor', label: 'Valor', format: (val: any) => formatCurrency(val) },
+    { key: 'data_vencimento', label: 'Vencimento', format: (val: any) => val ? format(parseISO(val), 'dd/MM/yyyy') : '' },
+    { key: 'data_pagamento', label: 'Pagamento', format: (val: any) => val ? format(parseISO(val), 'dd/MM/yyyy') : '' },
+    { key: 'status', label: 'Status' },
+    { key: 'metodo', label: 'Método', format: (val: any) => val || '' }
+  ];
 
   if (loading) {
     return (
@@ -150,8 +148,9 @@ export default function PagamentosPage() {
         
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <ExportButton 
-            data={exportData} 
+            data={filteredPagamentos} 
             filename="pagamentos" 
+            columns={exportColumns}
             className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
           />
           {canWrite && (

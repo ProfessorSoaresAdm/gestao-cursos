@@ -24,6 +24,14 @@ export default function ProfessoresPage() {
 
   const canWrite = role === 'admin' || role === 'editor';
 
+  const exportColumns = [
+    { key: 'nome', label: 'Nome' },
+    { key: 'email', label: 'Email' },
+    { key: 'telefone', label: 'Telefone' },
+    { key: 'especialidade', label: 'Especialidade' },
+    { key: 'ativo', label: 'Status', format: (val: any) => val ? 'Ativo' : 'Inativo' }
+  ];
+
   const filteredProfessores = useMemo(() => {
     return professores.filter(p => {
       const matchName = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
@@ -92,6 +100,7 @@ export default function ProfessoresPage() {
           <ExportButton 
             data={filteredProfessores} 
             filename="professores" 
+            columns={exportColumns}
             className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
           />
           {canWrite && (

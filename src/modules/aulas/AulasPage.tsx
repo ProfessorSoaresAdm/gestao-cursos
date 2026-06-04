@@ -73,17 +73,15 @@ export default function AulasPage() {
     }
   };
 
-  // Prepara dados para o ExportButton
-  const exportData = filteredAulas.map(a => ({
-    Titulo: a.titulo,
-    Professor: a.professores?.nome || 'Sem professor',
-    Data: format(new Date(a.data_hora), 'dd/MM/yyyy HH:mm'),
-    Duracao: `${a.duracao_minutos} min`,
-    Status: a.status,
-    LinkTransmissao: a.link_transmissao || '',
-    LinkGravacao: a.gravacao_url || '',
-    Observacoes: a.observacoes || ''
-  }));
+  const exportColumns = [
+    { key: 'titulo', label: 'Título' },
+    { key: 'professores.nome', label: 'Professor', format: (val: any) => val || 'Sem professor' },
+    { key: 'data_hora', label: 'Data', format: (val: any) => val ? format(new Date(val), 'dd/MM/yyyy') : '' },
+    { key: 'data_hora', label: 'Hora', format: (val: any) => val ? format(new Date(val), 'HH:mm') : '' },
+    { key: 'duracao_minutos', label: 'Duração', format: (val: any) => `${val} min` },
+    { key: 'status', label: 'Status' },
+    { key: 'link_transmissao', label: 'Link', format: (val: any) => val || '' }
+  ];
 
   if (loading) {
     return (
@@ -112,8 +110,9 @@ export default function AulasPage() {
         
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <ExportButton 
-            data={exportData} 
+            data={filteredAulas} 
             filename="aulas" 
+            columns={exportColumns}
             className="w-full sm:w-auto border-slate-700 text-slate-300 hover:bg-slate-800"
           />
           {canWrite && (

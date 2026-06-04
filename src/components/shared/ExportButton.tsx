@@ -1,37 +1,18 @@
 import React from 'react';
-import Papa from 'papaparse';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { exportToCSV, ColumnMapping } from '@/lib/export';
 
 interface ExportButtonProps {
   data: any[];
   filename: string;
   className?: string;
+  columns?: ColumnMapping[];
 }
 
-export function ExportButton({ data, filename, className }: ExportButtonProps) {
+export function ExportButton({ data, filename, className, columns }: ExportButtonProps) {
   const handleExport = () => {
-    if (!data || data.length === 0) {
-      alert("Não há dados para exportar.");
-      return;
-    }
-
-    const csv = Papa.unparse(data, {
-      quotes: true,
-      delimiter: ",",
-      header: true,
-    });
-
-    // Add BOM for Excel compatibility with UTF-8
-    const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${filename}-${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportToCSV(data, filename, columns);
   };
 
   return (
