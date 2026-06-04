@@ -34,31 +34,6 @@ export default function PessoalPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingFuncionario, setEditingFuncionario] = useState<PessoalRow | null>(null);
 
-  if (authLoading) {
-    return (
-      <div className="p-6 flex justify-center items-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
-      </div>
-    );
-  }
-
-  // Verificação dupla de segurança
-  if (role !== 'admin') {
-    return (
-      <div className="p-6 max-w-3xl mx-auto mt-10">
-        <div className="bg-red-950/30 border border-red-900/50 p-8 rounded-xl flex flex-col items-center justify-center text-center">
-          <div className="bg-red-900/50 p-4 rounded-full mb-4">
-            <ShieldAlert className="w-12 h-12 text-red-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-100 mb-2">Acesso Não Autorizado</h1>
-          <p className="text-slate-400">
-            A área de Gestão de Pessoal e RH é estritamente confidencial e limitada a Administradores.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const filteredPessoal = useMemo(() => {
     return pessoal.filter(p => {
       const matchNome = (p.nome || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -102,6 +77,33 @@ export default function PessoalPage() {
     Observacoes: p.observacoes || ''
     // Salário propositalmente omitido do CSV por segurança
   }));
+
+  if (authLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
+      </div>
+    );
+  }
+
+  // Verificação dupla de segurança
+  if (role !== 'admin') {
+    return (
+      <div className="p-6 max-w-3xl mx-auto mt-10">
+        <div className="bg-red-950/30 border border-red-900/50 p-8 rounded-xl flex flex-col items-center justify-center text-center">
+          <div className="bg-red-900/50 p-4 rounded-full mb-4">
+            <ShieldAlert className="w-12 h-12 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-100 mb-2">Acesso Não Autorizado</h1>
+          <p className="text-slate-400">
+            A área de Gestão de Pessoal e RH é estritamente confidencial e limitada a Administradores.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+
 
   if (pessoalLoading) {
     return (
