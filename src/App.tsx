@@ -44,14 +44,7 @@ export default function App() {
             <Route path="aulas" element={<AulasPage />} />
             <Route path="pagamentos" element={<PagamentosPage />} />
             <Route path="professores" element={<ProfessoresPage />} />
-            <Route 
-              path="pessoal" 
-              element={
-                <AuthGuard requireAdmin={true}>
-                  <PessoalPage />
-                </AuthGuard>
-              } 
-            />
+            <Route path="pessoal" element={<PessoalPage />} />
           </Route>
 
           {/* Catch-all route */}
