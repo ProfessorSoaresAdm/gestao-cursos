@@ -11,6 +11,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit2, CheckCircle, XCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { AulaWithProfessor } from './aulaService';
 
 export default function AulasPage() {
@@ -25,6 +36,14 @@ export default function AulasPage() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAula, setEditingAula] = useState<AulaWithProfessor | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    action: () => Promise<void>;
+  }>({
+    isOpen: false, title: '', description: '', action: async () => {}
+  });
 
   const canWrite = role === 'admin' || role === 'editor';
 
@@ -64,13 +83,19 @@ export default function AulasPage() {
   };
 
   const handleQuickStatus = async (aula: AulaWithProfessor, novoStatus: 'realizada' | 'cancelada') => {
-    if (confirm(`Deseja marcar esta aula como ${novoStatus}?`)) {
-      try {
-        await updateStatus(aula.id, novoStatus);
-      } catch (err: any) {
-        alert(`Erro ao alterar status: ${err.message}`);
+    setConfirmDialog({
+      isOpen: true,
+      title: `Marcar como ${novoStatus === 'realizada' ? 'Realizada' : 'Cancelada'}`,
+      description: `Deseja realmente marcar esta aula como ${novoStatus}?`,
+      action: async () => {
+        try {
+          await updateStatus(aula.id, novoStatus);
+          toast.success(`Aula marcada como ${novoStatus} com sucesso.`);
+        } catch (err: any) {
+          toast.error(`Erro ao alterar status: ${err.message}`);
+        }
       }
-    }
+    });
   };
 
   const exportColumns = [
@@ -244,6 +269,23 @@ export default function AulasPage() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={confirmDialog.isOpen} onOpenChange={(isOpen) => !isOpen && setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+        <AlertDialogContent className="bg-slate-900 border-slate-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-100">{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              {confirmDialog.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { confirmDialog.action(); setConfirmDialog(prev => ({...prev, isOpen: false})); }} className="bg-red-600 hover:bg-red-700">
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AulaForm 
         open={isFormOpen} 

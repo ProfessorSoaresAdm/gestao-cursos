@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
-import { Calendar, CreditCard, Users, Lock, LogOut, LayoutDashboard } from 'lucide-react';
+import { Calendar, CreditCard, Users, Lock, LogOut, LayoutDashboard, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -22,6 +22,7 @@ export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
 
   if (role === 'admin') {
     navItems.push({ name: 'Pessoal', to: '/pessoal', icon: Lock });
+    navItems.push({ name: 'Usuários', to: '/usuarios', icon: Shield });
   }
 
   const baseClasses = "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static";

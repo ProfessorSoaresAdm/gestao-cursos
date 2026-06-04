@@ -8,6 +8,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit2, Ban, CheckCircle2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Database } from '@/types/database';
 
 type Professor = Database['public']['Tables']['professores']['Row'];
@@ -21,6 +32,15 @@ export default function ProfessoresPage() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProfessor, setEditingProfessor] = useState<Professor | null>(null);
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    action: () => Promise<void>;
+  }>({
+    isOpen: false, title: '', description: '', action: async () => {}
+  });
 
   const canWrite = role === 'admin' || role === 'editor';
 
@@ -62,13 +82,20 @@ export default function ProfessoresPage() {
   };
 
   const handleToggleStatus = async (professor: Professor) => {
-    if (confirm(`Deseja realmente ${professor.ativo ? 'desativar' : 'ativar'} o professor ${professor.nome}?`)) {
-      try {
-        await toggleAtivo(professor.id, professor.ativo);
-      } catch (err: any) {
-        alert(`Erro ao alterar status: ${err.message}`);
+    const isDesativando = professor.ativo;
+    setConfirmDialog({
+      isOpen: true,
+      title: isDesativando ? 'Desativar Professor' : 'Reativar Professor',
+      description: `Deseja realmente ${isDesativando ? 'desativar' : 'ativar'} o professor ${professor.nome}?`,
+      action: async () => {
+        try {
+          await toggleAtivo(professor.id, professor.ativo);
+          toast.success(`Professor ${professor.nome} foi ${isDesativando ? 'desativado' : 'reativado'}.`);
+        } catch (err: any) {
+          toast.error(`Erro ao alterar status: ${err.message}`);
+        }
       }
-    }
+    });
   };
 
   if (loading) {
@@ -202,6 +229,23 @@ export default function ProfessoresPage() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={confirmDialog.isOpen} onOpenChange={(isOpen) => !isOpen && setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+        <AlertDialogContent className="bg-slate-900 border-slate-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-100">{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              {confirmDialog.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { confirmDialog.action(); setConfirmDialog(prev => ({...prev, isOpen: false})); }} className="bg-indigo-600 hover:bg-indigo-700">
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ProfessorForm 
         open={isFormOpen} 

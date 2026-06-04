@@ -8,9 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import type { Database } from '@/types/database';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProfessores } from '@/hooks/useProfessores';
 import { useAulas } from '@/hooks/useAulas';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import type { Database } from '@/types/database';
 
 type PagamentoRow = Database['public']['Tables']['pagamentos']['Row'];
 
@@ -99,10 +102,11 @@ export function PagamentoForm({ open, onOpenChange, pagamento, onSubmit }: Pagam
     try {
       setIsSubmitting(true);
       await onSubmit(data);
+      toast.success(pagamento ? 'Pagamento atualizado com sucesso!' : 'Pagamento cadastrado com sucesso!');
       onOpenChange(false);
     } catch (error: any) {
       console.error(error);
-      alert(`Erro ao salvar: ${error.message}`);
+      toast.error(`Erro ao salvar: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -214,6 +218,7 @@ export function PagamentoForm({ open, onOpenChange, pagamento, onSubmit }: Pagam
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isSubmitting ? 'Salvando...' : 'Salvar'}
             </Button>
           </DialogFooter>

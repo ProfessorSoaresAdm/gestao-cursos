@@ -8,8 +8,19 @@ import { ExportButton } from '@/components/shared/ExportButton';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, CheckCircle, Ban, DollarSign } from 'lucide-react';
+import { Plus, Search, Edit2, Ban, CheckCircle, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import type { PagamentoWithRelations } from './pagamentoService';
@@ -19,7 +30,7 @@ const formatCurrency = (value: number) => {
 };
 
 export default function PagamentosPage() {
-  const { pagamentos, loading, error, create, update, marcarPago, cancelar } = usePagamentos();
+  const { pagamentos, loading, error, create, update, cancelar, marcarPago } = usePagamentos();
   const { role } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,6 +39,15 @@ export default function PagamentosPage() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPagamento, setEditingPagamento] = useState<PagamentoWithRelations | null>(null);
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    action: () => Promise<void>;
+  }>({
+    isOpen: false, title: '', description: '', action: async () => {}
+  });
 
   // Modal rápido de pagamento
   const [quickPayOpen, setQuickPayOpen] = useState(false);
@@ -93,22 +113,29 @@ export default function PagamentosPage() {
     if (quickPayId) {
       try {
         await marcarPago(quickPayId, quickPayData.data, quickPayData.metodo);
+        toast.success('Pagamento baixado com sucesso!');
         setQuickPayOpen(false);
         setQuickPayId(null);
       } catch (err: any) {
-        alert(`Erro ao marcar pagamento: ${err.message}`);
+        toast.error(`Erro ao marcar pagamento: ${err.message}`);
       }
     }
   };
 
-  const handleCancel = async (pagamento: PagamentoWithRelations) => {
-    if (confirm(`Tem certeza que deseja cancelar o pagamento "${pagamento.descricao}"? Essa ação não pode ser desfeita.`)) {
-      try {
-        await cancelar(pagamento.id);
-      } catch (err: any) {
-        alert(`Erro ao cancelar: ${err.message}`);
+  const handleCancelPagamento = async (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Cancelar Pagamento',
+      description: 'Tem certeza que deseja cancelar este registro de pagamento? A ação poderá ser revertida alterando o status novamente.',
+      action: async () => {
+        try {
+          await cancelar(id);
+          toast.success('Pagamento cancelado com sucesso.');
+        } catch (err: any) {
+          toast.error(`Erro ao cancelar pagamento: ${err.message}`);
+        }
       }
-    }
+    });
   };
 
   const exportColumns = [
@@ -303,6 +330,23 @@ export default function PagamentosPage() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={confirmDialog.isOpen} onOpenChange={(isOpen) => !isOpen && setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+        <AlertDialogContent className="bg-slate-900 border-slate-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-100">{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              {confirmDialog.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { confirmDialog.action(); setConfirmDialog(prev => ({...prev, isOpen: false})); }} className="bg-red-600 hover:bg-red-700">
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PagamentoForm 
         open={isFormOpen} 

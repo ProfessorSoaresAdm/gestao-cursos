@@ -4,12 +4,13 @@ import { AuthGuard } from '@/auth/AuthGuard';
 import LoginPage from '@/auth/LoginPage';
 import { Layout } from '@/components/layout/Layout';
 
-// Pages
 import DashboardPage from '@/modules/dashboard/DashboardPage';
 import AulasPage from '@/modules/aulas/AulasPage';
 import PagamentosPage from '@/modules/pagamentos/PagamentosPage';
 import ProfessoresPage from '@/modules/professores/ProfessoresPage';
 import PessoalPage from '@/modules/pessoal/PessoalPage';
+import UsuariosPage from '@/modules/usuarios/UsuariosPage';
+import { Toaster } from '@/components/ui/sonner';
 
 // CRÍTICO: estas configurações evitam instabilidade ao trocar de aba (da skill auth-login-stability)
 const queryClient = new QueryClient({
@@ -47,11 +48,13 @@ export default function App() {
             <Route path="pagamentos" element={<PagamentosPage />} />
             <Route path="professores" element={<ProfessoresPage />} />
             <Route path="pessoal" element={<PessoalPage />} />
+            <Route path="usuarios" element={<UsuariosPage />} />
           </Route>
 
           {/* Catch-all route */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        <Toaster theme="dark" position="top-right" richColors />
       </BrowserRouter>
     </QueryClientProvider>
   );

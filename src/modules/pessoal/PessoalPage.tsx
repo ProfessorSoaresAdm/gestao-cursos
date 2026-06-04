@@ -7,8 +7,19 @@ import { ExportButton } from '@/components/shared/ExportButton';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, ShieldAlert } from 'lucide-react';
+import { Plus, Search, Edit2, ShieldAlert, Power } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Database } from '@/types/database';
 
 type PessoalRow = Database['public']['Tables']['pessoal']['Row'];
@@ -33,6 +44,15 @@ export default function PessoalPage() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingFuncionario, setEditingFuncionario] = useState<PessoalRow | null>(null);
+
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    action: () => Promise<void>;
+  }>({
+    isOpen: false, title: '', description: '', action: async () => {}
+  });
 
   const filteredPessoal = useMemo(() => {
     return pessoal.filter(p => {
@@ -62,6 +82,23 @@ export default function PessoalPage() {
     } else {
       await create(data);
     }
+  };
+
+  const handleToggleStatus = async (funcionario: PessoalRow) => {
+    const isDesativando = funcionario.status === 'ativo';
+    setConfirmDialog({
+      isOpen: true,
+      title: isDesativando ? 'Desligar Funcionário' : 'Reativar Funcionário',
+      description: `Deseja realmente ${isDesativando ? 'desligar' : 'reativar'} ${funcionario.nome}?`,
+      action: async () => {
+        try {
+          await update(funcionario.id, { status: isDesativando ? 'inativo' : 'ativo' });
+          toast.success(`Funcionário ${funcionario.nome} foi ${isDesativando ? 'desligado' : 'reativado'}.`);
+        } catch (err: any) {
+          toast.error(`Erro ao alterar status: ${err.message}`);
+        }
+      }
+    });
   };
 
   const exportColumns = [
@@ -204,15 +241,29 @@ export default function PessoalPage() {
                     <StatusBadge status={funcionario.status || 'ativo'} ativo={funcionario.status === 'ativo'} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleOpenEdit(funcionario)}
-                      className="text-slate-400 hover:text-indigo-400 hover:bg-indigo-400/10"
-                      title="Editar Confidencial"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleOpenEdit(funcionario)}
+                        className="text-slate-400 hover:text-indigo-400 hover:bg-indigo-400/10"
+                        title="Editar Confidencial"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleToggleStatus(funcionario)}
+                        className={funcionario.status === 'ativo' 
+                          ? "text-slate-400 hover:text-red-400 hover:bg-red-400/10" 
+                          : "text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10"
+                        }
+                        title={funcionario.status === 'ativo' ? "Desligar" : "Reativar"}
+                      >
+                        <Power className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -220,6 +271,23 @@ export default function PessoalPage() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={confirmDialog.isOpen} onOpenChange={(isOpen) => !isOpen && setConfirmDialog(prev => ({ ...prev, isOpen: false }))}>
+        <AlertDialogContent className="bg-slate-900 border-slate-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-100">{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              {confirmDialog.description}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { confirmDialog.action(); setConfirmDialog(prev => ({...prev, isOpen: false})); }} className="bg-indigo-600 hover:bg-indigo-700">
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PessoalForm 
         open={isFormOpen} 

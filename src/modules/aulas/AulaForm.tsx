@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Database } from '@/types/database';
 import { useProfessores } from '@/hooks/useProfessores';
 
@@ -102,10 +104,11 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
       };
 
       await onSubmit(payload);
+      toast.success(aula ? 'Aula atualizada com sucesso!' : 'Aula agendada com sucesso!');
       onOpenChange(false);
     } catch (error: any) {
       console.error(error);
-      alert(`Erro ao salvar: ${error.message}`);
+      toast.error(`Erro ao salvar: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -198,6 +201,7 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {isSubmitting ? 'Salvando...' : 'Salvar'}
             </Button>
           </DialogFooter>
