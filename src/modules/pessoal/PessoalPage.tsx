@@ -14,14 +14,22 @@ import type { Database } from '@/types/database';
 type PessoalRow = Database['public']['Tables']['pessoal']['Row'];
 
 export default function PessoalPage() {
-  const { pessoal, loading, error, create, update } = usePessoal();
-  const { role } = useAuth();
+  const { pessoal, loading: pessoalLoading, error, create, update } = usePessoal();
+  const { role, loading: authLoading } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'todos' | 'ativos' | 'inativos'>('todos');
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingFuncionario, setEditingFuncionario] = useState<PessoalRow | null>(null);
+
+  if (authLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
+      </div>
+    );
+  }
 
   // Verificação dupla de segurança
   if (role !== 'admin') {
@@ -84,7 +92,7 @@ export default function PessoalPage() {
     // Salário propositalmente omitido do CSV por segurança
   }));
 
-  if (loading) {
+  if (pessoalLoading) {
     return (
       <div className="p-6 flex justify-center items-center h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
