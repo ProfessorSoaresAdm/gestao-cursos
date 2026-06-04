@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
-  const { role, signOut } = useAuth();
+  const { role, telasAcesso, signOut } = useAuth();
 
   const navItems = [
     { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
@@ -25,6 +25,15 @@ export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
     navItems.push({ name: 'Usuários', to: '/usuarios', icon: Shield });
     navItems.push({ name: 'Backups', to: '/backup', icon: Server });
   }
+
+  // Filtra itens com base no telasAcesso (admin vê tudo independentemente)
+  const filteredNavItems = role === 'admin' 
+    ? navItems 
+    : navItems.filter(item => {
+        // Ex: '/dashboard' -> 'dashboard'
+        const screenKey = item.to.replace('/', '');
+        return telasAcesso.includes(screenKey);
+      });
 
   const baseClasses = "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static";
   const mobileClasses = isMobileOpen ? "translate-x-0" : "-translate-x-full";
@@ -45,7 +54,7 @@ export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
         </div>
 
         <nav className="flex-1 min-h-0 overflow-y-auto py-4 px-3 space-y-1">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink

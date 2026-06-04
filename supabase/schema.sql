@@ -52,10 +52,14 @@ CREATE TRIGGER trg_profiles_atualizado_em
   FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
 
 -- Função get_my_role() criada APÓS profiles (referencia esta tabela)
-CREATE OR REPLACE FUNCTION get_my_role()
-RETURNS TEXT AS $$
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS TEXT
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
   SELECT role FROM profiles WHERE id = auth.uid();
-$$ LANGUAGE sql SECURITY DEFINER;
+$$;
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
@@ -246,8 +250,12 @@ CREATE POLICY pessoal_admin_only ON pessoal
 --   UPDATE profiles SET role = 'admin' WHERE email = '...';
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   INSERT INTO profiles (id, nome, email, role)
   VALUES (
@@ -258,7 +266,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

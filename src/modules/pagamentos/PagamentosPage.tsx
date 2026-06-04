@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import type { PagamentoWithProfessor } from './pagamentoService';
+import type { PagamentoWithRelations } from './pagamentoService';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -42,7 +42,7 @@ export default function PagamentosPage() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [editingPagamento, setEditingPagamento] = useState<PagamentoWithProfessor | null>(null);
+  const [editingPagamento, setEditingPagamento] = useState<PagamentoWithRelations | null>(null);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -95,7 +95,7 @@ export default function PagamentosPage() {
     setIsFormOpen(true);
   };
 
-  const handleOpenEdit = (pagamento: PagamentoWithProfessor) => {
+  const handleOpenEdit = (pagamento: PagamentoWithRelations) => {
     setEditingPagamento(pagamento);
     setIsFormOpen(true);
   };
@@ -127,7 +127,7 @@ export default function PagamentosPage() {
     }
   };
 
-  const handleCancel = async (pagamento: PagamentoWithProfessor) => {
+  const handleQuickStatus = async (pagamento: PagamentoWithRelations, novoStatus: 'pago' | 'cancelado') => {
     setConfirmDialog({
       isOpen: true,
       title: 'Cancelar Pagamento',
@@ -372,7 +372,7 @@ export default function PagamentosPage() {
                           <Button 
                             variant="ghost" 
                             size="icon"
-                            onClick={() => handleCancel(pagamento)}
+                            onClick={() => handleQuickStatus(pagamento, 'cancelado')}
                             className="text-slate-400 hover:text-red-400 hover:bg-red-400/10"
                             title="Cancelar"
                           >

@@ -1,20 +1,35 @@
-import React from 'react';
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 
-export class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
+interface Props {
+  children: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+    errorInfo: null
+  };
+
+  constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error, errorInfo: null };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    this.setState({ errorInfo });
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // @ts-ignore - falso positivo de tipagem do React.Component
+    this.setState({
+      errorInfo: errorInfo
+    });
     console.error("ErrorBoundary caught an error", error, errorInfo);
   }
 
@@ -33,6 +48,7 @@ export class ErrorBoundary extends React.Component<
       );
     }
 
+    // @ts-ignore - falso positivo de tipagem do React.Component
     return this.props.children;
   }
 }

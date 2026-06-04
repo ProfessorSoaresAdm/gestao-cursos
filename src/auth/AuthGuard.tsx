@@ -13,6 +13,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
+  const [allowedScreens, setAllowedScreens] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const isMountedRef = useMounted();
   const location = useLocation();
@@ -61,7 +62,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role, ativo')
+        .select('role, ativo, telas_acesso')
         .eq('id', userId)
         .single();
 
@@ -69,6 +70,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
         if (!error && data) {
           setIsAdmin(data.role === 'admin');
           setIsSuspended(!data.ativo);
+          setAllowedScreens(data.telas_acesso || []);
         }
         setLoading(false);
       }
@@ -99,6 +101,20 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   // PASSO 9: Redirecionar não-admins tentando acessar rotas admin.
   if (requireAdmin && !isAdmin) {
     return <Navigate to="/" replace />;
+  }
+
+  // PASSO 10: Bloquear acesso baseado nas telas permitidas.
+  // Ignora bloqueio para admin (Admin tem acesso a tudo) ou se a rota for a raiz '/'.
+  if (!isAdmin && location.pathname !== '/') {
+    // Extrai o nome da tela da rota (ex: "/professores" -> "professores")
+    const currentScreen = location.pathname.split('/')[1];
+    
+    // Lista de rotas válidas que requerem verificação no array de permissões
+    const restrictedScreens = ['dashboard', 'aulas', 'pagamentos', 'professores', 'pessoal', 'usuarios', 'backup'];
+    
+    if (restrictedScreens.includes(currentScreen) && !allowedScreens.includes(currentScreen)) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <>{children}</>;

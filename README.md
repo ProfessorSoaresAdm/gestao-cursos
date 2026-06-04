@@ -81,6 +81,9 @@ No Supabase Dashboard, vá em **SQL Editor** e execute o arquivo:
 supabase/schema.sql
 ```
 
+Depois disso, crie o primeiro usuário em **Authentication → Users** no painel do Supabase.
+Não crie usuários com `INSERT` direto em `auth.users`, porque isso pode deixar o Auth inconsistente.
+
 Para popular dados de teste (apenas em desenvolvimento):
 
 ```
@@ -116,7 +119,7 @@ npm run typecheck  # Verificação TypeScript sem compilar
 | `editor` | Cria e edita registros em Aulas, Pagamentos e Professores. |
 | `viewer` | Somente leitura em todos os módulos permitidos. |
 
-O primeiro usuário deve ser promovido a `admin` manualmente via Supabase:
+Depois de criar o primeiro usuário no Auth, promova-o a `admin` manualmente via Supabase:
 
 ```sql
 UPDATE profiles SET role = 'admin' WHERE email = 'seu@email.com';

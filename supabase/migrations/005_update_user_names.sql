@@ -9,9 +9,9 @@ WHERE email = 'delmondesadv@gmail.com';
 
 -- Update for Usuário de Teste
 UPDATE auth.users 
-SET raw_user_meta_data = '{"nome": "Usuário de Teste", "name": "Usuário de Teste", "full_name": "Usuário de Teste"}'::jsonb
-WHERE email = 'example@email.com';
+SET raw_user_meta_data = '{"nome": "Antônio Soares", "name": "Antônio Soares", "full_name": "Usuário de Teste"}'::jsonb
+WHERE email = '*20SistemaControle26#';
 
 UPDATE public.profiles 
-SET nome = 'Usuário de Teste' 
-WHERE email = 'example@email.com';
+SET nome = 'Antônio Soares' 
+WHERE email = '*20SistemaControle26#';

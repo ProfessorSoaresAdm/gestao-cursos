@@ -6,6 +6,7 @@ import type { User } from '@supabase/supabase-js';
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<'admin' | 'editor' | 'viewer' | null>(null);
+  const [telasAcesso, setTelasAcesso] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const isMountedRef = useMounted();
 
@@ -23,6 +24,7 @@ export function useAuth() {
         } else {
           if (isMountedRef.current) {
             setRole(null);
+            setTelasAcesso([]);
             setLoading(false);
           }
         }
@@ -47,13 +49,14 @@ export function useAuth() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, telas_acesso')
         .eq('id', userId)
         .single();
 
       if (isMountedRef.current) {
         if (!error && data) {
           setRole(data.role as 'admin' | 'editor' | 'viewer');
+          setTelasAcesso(data.telas_acesso || []);
         }
         setLoading(false);
       }
@@ -66,5 +69,5 @@ export function useAuth() {
     await supabase.auth.signOut();
   }
 
-  return { user, role, loading, signOut };
+  return { user, role, telasAcesso, loading, signOut };
 }
