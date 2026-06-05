@@ -1,9 +1,11 @@
 import React from 'react';
 import { useAuth } from '@/auth/useAuth';
-import { Menu, LogOut, ShieldAlert, ShieldCheck, User as UserIcon, Settings } from 'lucide-react';
+import { Menu, LogOut, ShieldAlert, ShieldCheck, User as UserIcon, Settings, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ProfileModal } from './ProfileModal';
+import { ChangelogModal } from '../shared/ChangelogModal';
+import { useChangelog } from '@/hooks/useChangelog';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -13,6 +15,8 @@ interface HeaderProps {
 export function Header({ setMobileOpen }: HeaderProps) {
   const { user, role, signOut } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
+  const { totalNaoLidos } = useChangelog(user?.id);
   
   const userName = user?.user_metadata?.nome || user?.email?.split('@')[0] || 'Usuário';
 
@@ -55,6 +59,17 @@ export function Header({ setMobileOpen }: HeaderProps) {
 
         <div className="h-8 w-px bg-slate-800 mx-2 hidden sm:block"></div>
 
+        {totalNaoLidos > 0 && (
+          <Button variant="ghost" size="icon"
+            onClick={() => setChangelogOpen(true)}
+            className="relative text-slate-400 hover:text-slate-200">
+            <Bell className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-indigo-500 text-white text-[10px] flex items-center justify-center font-bold animate-pulse">
+              {totalNaoLidos > 9 ? '9+' : totalNaoLidos}
+            </span>
+          </Button>
+        )}
+
         <Button 
           variant="ghost" 
           size="sm"
@@ -77,6 +92,13 @@ export function Header({ setMobileOpen }: HeaderProps) {
       </div>
 
       <ProfileModal open={isProfileOpen} onOpenChange={setIsProfileOpen} />
+      {user && (
+        <ChangelogModal 
+          userId={user.id} 
+          externalOpen={changelogOpen} 
+          onExternalOpenChange={setChangelogOpen} 
+        />
+      )}
     </header>
   );
 }

@@ -15,6 +15,7 @@ const PessoalPage = lazy(() => import('@/modules/pessoal/PessoalPage'));
 const UsuariosPage = lazy(() => import('@/modules/usuarios/UsuariosPage'));
 const BackupPage = lazy(() => import('@/modules/backup/BackupPage'));
 const RelatoriosPage = lazy(() => import('@/modules/relatorios/RelatoriosPage'));
+const ChangelogPage = lazy(() => import('@/modules/changelog/ChangelogPage'));
 import { Toaster } from '@/components/ui/sonner';
 
 // CRÍTICO: estas configurações evitam instabilidade ao trocar de aba (da skill auth-login-stability)
@@ -64,6 +65,7 @@ export default function App() {
                 <Route path="usuarios" element={<UsuariosPage />} />
                 <Route path="backup" element={<BackupPage />} />
                 <Route path="relatorios" element={<RelatoriosPage />} />
+                <Route path="changelog" element={<ChangelogPage />} />
               </Route>
 
               {/* Catch-all route */}

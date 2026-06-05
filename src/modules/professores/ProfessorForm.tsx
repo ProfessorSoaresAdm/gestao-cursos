@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
-import { Upload, Instagram } from 'lucide-react';
+import { Upload, Instagram, QrCode } from 'lucide-react';
 import type { Database } from '@/types/database';
 
 type Professor = Database['public']['Tables']['professores']['Row'];
@@ -29,7 +29,9 @@ const schema = z.object({
   estado: z.string().optional().nullable(),
   observacoes: z.string().optional().nullable(),
   instagram_handle: z.string().regex(/^[a-zA-Z0-9_.]{1,30}$/, 'Handle inválido').or(z.literal('')).optional().transform(v => v === '' ? null : v),
-  foto_url: z.string().url().optional().nullable(),
+  foto_url: z.string().url().or(z.literal('')).optional().transform(v => v === '' ? null : v),
+  pix_tipo: z.enum(['cpf','cnpj','email','telefone','aleatoria']).or(z.literal('')).optional().transform(v => v === '' ? null : v),
+  pix_chave: z.string().optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -66,10 +68,13 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
       observacoes: '',
       instagram_handle: '',
       foto_url: '',
+      pix_tipo: null,
+      pix_chave: '',
     }
   });
 
   const watchHandle = watch('instagram_handle');
+  const watchPixTipo = watch('pix_tipo');
 
   useEffect(() => {
     if (open) {
@@ -91,6 +96,8 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
           observacoes: professor.observacoes || '',
           instagram_handle: professor.instagram_handle || '',
           foto_url: professor.foto_url || '',
+          pix_tipo: (professor.pix_tipo as any) || null,
+          pix_chave: professor.pix_chave || '',
         });
         setFotoPreview(professor.foto_url || null);
       } else {
@@ -111,6 +118,8 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
           observacoes: '',
           instagram_handle: '',
           foto_url: '',
+          pix_tipo: null,
+          pix_chave: '',
         });
         setFotoPreview(null);
       }
@@ -150,6 +159,12 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
   };
 
   const initials = watch('nome') ? watch('nome').substring(0, 2).toUpperCase() : 'PR';
+
+  let pixPlaceholder = "Chave PIX";
+  if (watchPixTipo === 'cpf') pixPlaceholder = "000.000.000-00";
+  if (watchPixTipo === 'cnpj') pixPlaceholder = "00.000.000/0000-00";
+  if (watchPixTipo === 'telefone') pixPlaceholder = "(00) 90000-0000";
+  if (watchPixTipo === 'email') pixPlaceholder = "email@exemplo.com";
 
   const handleFormSubmit = async (data: FormData) => {
     try {
@@ -281,6 +296,35 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
               <div className="space-y-2">
                 <Label htmlFor="estado">Estado</Label>
                 <Input id="estado" {...register('estado')} placeholder="UF" className="bg-slate-950 border-slate-800" maxLength={2} />
+              </div>
+            </div>
+          </div>
+
+          <div className="border border-slate-800 rounded-md p-4 bg-slate-900/50">
+            <h3 className="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
+              <QrCode className="w-4 h-4 text-emerald-400" /> Dados PIX
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo da Chave</Label>
+                <select {...register("pix_tipo")}
+                  className="w-full h-10 px-3 rounded-md bg-slate-950 border border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="">Selecione...</option>
+                  <option value="cpf">CPF</option>
+                  <option value="cnpj">CNPJ</option>
+                  <option value="email">E-mail</option>
+                  <option value="telefone">Telefone</option>
+                  <option value="aleatoria">Chave Aleatória</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Chave PIX</Label>
+                <Input {...register("pix_chave")}
+                  placeholder={pixPlaceholder}
+                  className="bg-slate-950 border-slate-800" />
+                {errors.pix_chave && (
+                  <p className="text-xs text-red-500">{errors.pix_chave.message}</p>
+                )}
               </div>
             </div>
           </div>

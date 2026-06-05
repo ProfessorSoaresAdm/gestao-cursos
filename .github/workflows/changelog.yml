@@ -1,0 +1,49 @@
+name: Registrar Changelog
+on:
+  push:
+    branches: [main]
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Classificar commit e registrar changelog
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Extrair mensagem do commit
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          COMMIT_BODY=$(git log -1 --pretty=%b)
+          VERSION=$(node -p "require('./package.json').version")
+
+          # Classificar tipo
+          if echo "$COMMIT_MSG" | grep -qE "^feat(\(.+\))?:"; then
+            TIPO="feature"
+          elif echo "$COMMIT_MSG" | grep -qE "^fix(\(.+\))?:"; then
+            TIPO="fix"
+          elif echo "$COMMIT_MSG" | grep -qE "^(perf|refactor)(\(.+\))?:"; then
+            TIPO="melhoria"
+          elif echo "$COMMIT_MSG" | grep -qE "^(rls|db)(\(.+\))?:"; then
+            TIPO="seguranca"
+          elif echo "$COMMIT_BODY" | grep -q "BREAKING CHANGE"; then
+            TIPO="breaking"
+          else
+            echo "Commit ignoravel — sem notificacao."
+            exit 0
+          fi
+
+          # Titulo = mensagem sem o prefixo
+          TITULO=$(echo "$COMMIT_MSG" | sed 's/^[a-z]*([^)]*): //' | sed 's/^[a-z]*: //')
+
+          # Limpar e encodar o JSON com seguranca (escapar aspas)
+          # Utilizando node para gerar o JSON final
+          PAYLOAD=$(node -e "console.log(JSON.stringify({ tipo: '$TIPO', titulo: process.argv[1], descricao: process.argv[2], versao: '$VERSION' }))" "$TITULO" "$COMMIT_BODY")
+
+          # Chamar Edge Function
+          curl -s -X POST "$SUPABASE_URL/functions/v1/registrar-changelog" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"

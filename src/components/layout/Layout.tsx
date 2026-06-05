@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { useAuth } from '@/auth/useAuth';
 import { BackupReminderModal } from '@/components/shared/BackupReminderModal';
 
 export function Layout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <div className="flex h-screen bg-slate-950 overflow-hidden">

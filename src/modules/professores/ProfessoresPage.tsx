@@ -2,12 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { useProfessores } from '@/hooks/useProfessores';
 import { useAuth } from '@/auth/useAuth';
 import { ProfessorForm } from './ProfessorForm';
+import { PixModal } from '@/components/shared/PixModal';
 import { ImportModal } from '@/components/shared/ImportModal';
 import { ExportButton } from '@/components/shared/ExportButton';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, Ban, CheckCircle2, Upload, Instagram } from 'lucide-react';
+import { Plus, Search, Edit2, Ban, CheckCircle2, Upload, Instagram, QrCode } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import {
@@ -33,7 +34,9 @@ export default function ProfessoresPage() {
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [pixOpen, setPixOpen] = useState(false);
   const [editingProfessor, setEditingProfessor] = useState<Professor | null>(null);
+  const [pixProfessor, setPixProfessor] = useState<Professor | null>(null);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -253,6 +256,14 @@ export default function ProfessoresPage() {
                   {canWrite && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {professor.pix_chave && (
+                          <Button variant="ghost" size="icon"
+                            onClick={() => { setPixProfessor(professor); setPixOpen(true); }}
+                            className="text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10"
+                            title="Ver PIX">
+                            <QrCode className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="icon"
@@ -318,6 +329,12 @@ export default function ProfessoresPage() {
         onOpenChange={setIsFormOpen} 
         professor={editingProfessor}
         onSubmit={handleFormSubmit}
+      />
+
+      <PixModal
+        professor={pixProfessor ? { nome: pixProfessor.nome, pix_tipo: pixProfessor.pix_tipo || '', pix_chave: pixProfessor.pix_chave || '', cidade: pixProfessor.cidade || '' } : null}
+        open={pixOpen}
+        onOpenChange={setPixOpen}
       />
     </div>
   );

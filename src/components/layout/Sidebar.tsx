@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
-import { Calendar, CreditCard, Users, Lock, LogOut, LayoutDashboard, Shield, Server, BarChart3 } from 'lucide-react';
+import { useChangelog } from '@/hooks/useChangelog';
+import { Calendar, CreditCard, Users, Lock, LogOut, LayoutDashboard, Shield, Server, BarChart3, Newspaper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -11,13 +12,15 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
-  const { role, telasAcesso, signOut } = useAuth();
+  const { role, telasAcesso, signOut, user } = useAuth();
+  const { totalNaoLidos } = useChangelog(user?.id);
 
   const navItems = [
     { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
     { name: 'Aulas', to: '/aulas', icon: Calendar },
     { name: 'Pagamentos', to: '/pagamentos', icon: CreditCard },
     { name: 'Professores', to: '/professores', icon: Users },
+    { name: 'Novidades', to: '/changelog', icon: Newspaper },
   ];
 
   if (role === 'admin') {
@@ -31,6 +34,7 @@ export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
   const filteredNavItems = role === 'admin' 
     ? navItems 
     : navItems.filter(item => {
+        if (item.to === '/changelog') return true;
         // Ex: '/dashboard' -> 'dashboard'
         const screenKey = item.to.replace('/', '');
         return telasAcesso.includes(screenKey);
@@ -70,7 +74,12 @@ export function Sidebar({ isMobileOpen, setMobileOpen }: SidebarProps) {
                 )}
               >
                 <Icon className="w-5 h-5" />
-                {item.name}
+                <span className="flex-1">{item.name}</span>
+                {item.to === '/changelog' && totalNaoLidos > 0 && (
+                  <span className="bg-indigo-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                    {totalNaoLidos > 9 ? '9+' : totalNaoLidos}
+                  </span>
+                )}
               </NavLink>
             );
           })}
