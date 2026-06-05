@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setTelasAcesso(data.telas_acesso || []);
             setAtivo(data.ativo !== false);
           }
+          // loading só vira false AQUI, depois do perfil carregado
           setLoading(false);
         }
       } catch {
@@ -52,32 +53,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (mounted) {
-          setUser(session?.user ?? null);
-        }
+      async (event, session) => {
+        if (!mounted) return;
 
         if (session?.user) {
-          queueMicrotask(() => {
-            fetchProfile(session.user.id);
-          });
+          // Manter loading=true enquanto busca o perfil
+          setUser(session.user);
+          setLoading(true);
+          await fetchProfile(session.user.id);
         } else {
-          if (mounted) {
-            setRole(null);
-            setTelasAcesso([]);
-            setAtivo(true);
-            setLoading(false);
-          }
+          setUser(null);
+          setRole(null);
+          setTelasAcesso([]);
+          setAtivo(true);
+          setLoading(false);
         }
       }
     );
 
-    supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
-      if (mounted) {
-        setUser(currentUser ?? null);
-        if (!currentUser) {
-          setLoading(false);
-        }
+    // Verificar sessão existente na inicialização
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      if (session?.user) {
+        setUser(session.user);
+        // loading continua true — fetchProfile vai completar via onAuthStateChange
+      } else {
+        setLoading(false);
       }
     });
 
