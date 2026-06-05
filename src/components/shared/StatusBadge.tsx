@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { AULA_STATUS, getStatusConfig } from '@/types/aulaStatus';
 
 interface StatusBadgeProps {
   ativo?: boolean;
@@ -9,13 +10,14 @@ interface StatusBadgeProps {
 export function StatusBadge({ ativo, status }: StatusBadgeProps) {
   // Trata o caso de status string (Aulas, Pagamentos, etc)
   if (status) {
+    const isAulaStatus = AULA_STATUS.some(s => s.value === status.toLowerCase());
+    
+    if (isAulaStatus) {
+      const config = getStatusConfig(status.toLowerCase());
+      return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${config.cor}`}>{config.label}</span>;
+    }
+
     switch (status.toLowerCase()) {
-      case 'agendada':
-        return <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-none">Agendada</Badge>;
-      case 'realizada':
-        return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none">Realizada</Badge>;
-      case 'cancelada':
-        return <Badge className="bg-slate-500 hover:bg-slate-600 text-white border-none">Cancelada</Badge>;
       case 'pendente':
         return <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-none">Pendente</Badge>;
       case 'pago':

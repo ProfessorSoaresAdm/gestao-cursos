@@ -4,6 +4,7 @@ import { useProfessores } from '@/hooks/useProfessores';
 import { useAuth } from '@/auth/useAuth';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { AULA_STATUS } from '@/types/aulaStatus';
 import { AulaForm } from './AulaForm';
 import { ImportModal } from '@/components/shared/ImportModal';
 import { ExportButton } from '@/components/shared/ExportButton';
@@ -31,7 +32,7 @@ export default function AulasPage() {
   const { role } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'todos' | 'agendada' | 'realizada' | 'cancelada'>('todos');
+  const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [professorFilter, setProfessorFilter] = useState<string>('todos');
   const [mesFilter, setMesFilter] = useState<string>(''); // Formato YYYY-MM
   
@@ -84,10 +85,10 @@ export default function AulasPage() {
     }
   };
 
-  const handleQuickStatus = async (aula: AulaWithProfessor, novoStatus: 'realizada' | 'cancelada') => {
+  const handleQuickStatus = async (aula: AulaWithProfessor, novoStatus: 'aula_postada' | 'cancelada') => {
     setConfirmDialog({
       isOpen: true,
-      title: `Marcar como ${novoStatus === 'realizada' ? 'Realizada' : 'Cancelada'}`,
+      title: `Marcar como ${novoStatus === 'aula_postada' ? 'Aula Postada' : 'Cancelada'}`,
       description: `Deseja realmente marcar esta aula como ${novoStatus}?`,
       action: async () => {
         try {
@@ -128,6 +129,7 @@ export default function AulasPage() {
           throw new Error(`Data inválida: "${dataStr}". Use o formato AAAA-MM-DDTHH:MM (ex: 2026-10-15T14:30)`);
         }
         
+        const statusValidos = AULA_STATUS.map(s => s.value);
         return {
           professor_id,
           titulo: row['Titulo'] || 'Aula importada',
@@ -135,7 +137,7 @@ export default function AulasPage() {
           data_hora: dataHoraFinal,
           duracao_minutos: duracao,
           link_transmissao: row['Link'] || null,
-          status: row['Status'] === 'realizada' ? 'realizada' : row['Status'] === 'cancelada' ? 'cancelada' : 'agendada'
+          status: statusValidos.includes(row['Status']) ? row['Status'] : 'agendada'
         };
       });
 
@@ -240,9 +242,9 @@ export default function AulasPage() {
           className="h-10 px-3 py-2 rounded-md bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-48"
         >
           <option value="todos">Todos os Status</option>
-          <option value="agendada">Agendada</option>
-          <option value="realizada">Realizada</option>
-          <option value="cancelada">Cancelada</option>
+          {AULA_STATUS.map(s => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
         </select>
       </div>
 
@@ -280,18 +282,29 @@ export default function AulasPage() {
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={aula.status} />
+                      {(() => {
+                        const STATUS_PROGRESSO = ['agendada','confirmada','material_enviado','material_postado','aula_postada'];
+                        const progressoIdx = STATUS_PROGRESSO.indexOf(aula.status);
+                        return progressoIdx >= 0 && (
+                          <div className="flex gap-0.5 mt-2">
+                            {STATUS_PROGRESSO.map((_,i) => (
+                              <div key={i} className={`h-1 w-4 rounded-full transition-colors ${i <= progressoIdx ? 'bg-indigo-500' : 'bg-slate-700'}`} />
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     {canWrite && (
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {aula.status === 'agendada' && (
+                          {aula.status !== 'cancelada' && aula.status !== 'aula_postada' && (
                             <>
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                onClick={() => handleQuickStatus(aula, 'realizada')}
+                                onClick={() => handleQuickStatus(aula, 'aula_postada')}
                                 className="text-slate-400 hover:text-emerald-400 hover:bg-emerald-400/10"
-                                title="Marcar como Realizada"
+                                title="Marcar como Aula Postada"
                               >
                                 <CheckCircle className="w-4 h-4" />
                               </Button>

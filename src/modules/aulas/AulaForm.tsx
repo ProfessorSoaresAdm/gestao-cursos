@@ -12,6 +12,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/types/database';
 import { useProfessores } from '@/hooks/useProfessores';
+import { AULA_STATUS } from '@/types/aulaStatus';
 
 type AulaRow = Database['public']['Tables']['aulas']['Row'];
 
@@ -21,7 +22,7 @@ const schema = z.object({
   data_hora: z.string().min(1, 'Data e Hora são obrigatórias'),
   duracao_minutos: z.coerce.number().min(1, 'Duração deve ser maior que 0'),
   link_transmissao: z.string().optional().nullable(),
-  status: z.enum(['agendada', 'realizada', 'cancelada', 'reagendada', 'em_andamento', 'confirmada', 'material_enviado', 'material_postado', 'aula_postada']).default('agendada'),
+  status: z.enum(['agendada','confirmada','material_enviado','material_postado','aula_postada','cancelada']).default('agendada'),
   gravacao_url: z.string().optional().nullable(),
   observacoes: z.string().optional().nullable(),
   monitor_id: z.string().uuid().optional().nullable().or(z.literal('')),
@@ -104,7 +105,7 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
       const payload = {
         ...data,
         data_hora: dataFormatadaParaBanco,
-        gravacao_url: data.status === 'realizada' ? data.gravacao_url : null,
+        gravacao_url: data.status === 'aula_postada' ? data.gravacao_url : null,
       };
 
       await onSubmit(payload);
@@ -177,15 +178,9 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
                 {...register('status')}
                 className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-slate-200"
               >
-                <option value="agendada">Agendada</option>
-                <option value="em_andamento">Em Andamento</option>
-                <option value="realizada">Realizada</option>
-                <option value="cancelada">Cancelada</option>
-                <option value="reagendada">Reagendada</option>
-                <option value="confirmada">Confirmada</option>
-                <option value="material_enviado">Material Enviado</option>
-                <option value="material_postado">Material Postado</option>
-                <option value="aula_postada">Aula Postada</option>
+                {AULA_STATUS.map(s => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
               </select>
             </div>
             <div className="space-y-2">
@@ -194,7 +189,7 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
             </div>
           </div>
 
-          {watchStatus === 'realizada' && (
+          {watchStatus === 'aula_postada' && (
             <div className="space-y-2 animate-in fade-in zoom-in duration-200">
               <Label htmlFor="gravacao_url">Link da Gravação</Label>
               <Input id="gravacao_url" {...register('gravacao_url')} placeholder="https://youtube.com/..." className="bg-slate-900 border-slate-800" />
