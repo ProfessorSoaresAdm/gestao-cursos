@@ -123,7 +123,7 @@ export function ImportModal({
             <Upload className="w-5 h-5 text-indigo-400" />
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription asChild>
+          <AlertDialogDescription>
             <div className="space-y-4 mt-4">
               <div className="bg-slate-800/50 p-4 rounded-lg text-slate-300 text-sm">
                 <h4 className="font-medium text-slate-200 mb-2 flex items-center gap-2">

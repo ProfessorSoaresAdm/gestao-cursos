@@ -88,6 +88,13 @@ CREATE TABLE IF NOT EXISTS professores (
   telefone      TEXT,
   especialidade TEXT,
   documento     TEXT,       -- CPF ou equivalente
+  cep           TEXT,
+  logradouro    TEXT,
+  numero        TEXT,
+  complemento   TEXT,
+  bairro        TEXT,
+  cidade        TEXT,
+  estado        TEXT,
   endereco      TEXT,
   observacoes   TEXT,
   ativo         BOOLEAN     NOT NULL DEFAULT true,
@@ -205,6 +212,17 @@ CREATE POLICY pagamentos_write ON pagamentos
   FOR ALL
   USING (get_my_role() IN ('admin', 'editor'));
 
+-- VIEW: pagamentos_com_status
+-- View que injeta o status "atrasado" calculado em tempo real
+CREATE OR REPLACE VIEW pagamentos_com_status AS
+SELECT 
+  p.*,
+  CASE 
+    WHEN p.status = 'pendente' AND p.data_vencimento < CURRENT_DATE THEN 'atrasado'
+    ELSE p.status
+  END as status_calculado
+FROM pagamentos p;
+
 
 -- ============================================================
 -- TABELA: pessoal
@@ -235,6 +253,8 @@ CREATE TABLE IF NOT EXISTS pessoal (
 CREATE TRIGGER trg_pessoal_atualizado_em
   BEFORE UPDATE ON pessoal
   FOR EACH ROW EXECUTE FUNCTION set_atualizado_em();
+
+CREATE INDEX IF NOT EXISTS idx_pessoal_status ON pessoal (status);
 
 ALTER TABLE pessoal ENABLE ROW LEVEL SECURITY;
 

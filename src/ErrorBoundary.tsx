@@ -10,7 +10,7 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends React.Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
@@ -25,8 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error, errorInfo: null };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // @ts-ignore - falso positivo de tipagem do React.Component
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     this.setState({
       errorInfo: errorInfo
     });
@@ -36,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 20, color: 'white', backgroundColor: '#990000', minHeight: '100vh' }}>
+        <div className="p-5 text-white bg-red-900 min-h-screen">
           <h1>Algo deu errado (Crash detectado)</h1>
           <details style={{ whiteSpace: 'pre-wrap' }}>
             <summary>Ver stack trace</summary>
@@ -48,7 +47,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    // @ts-ignore - falso positivo de tipagem do React.Component
-    return this.props.children;
+    return this.props.children as React.ReactElement;
   }
 }

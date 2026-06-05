@@ -207,7 +207,7 @@ export default function PessoalPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
-            Gestão de Pessoal <ShieldAlert className="w-5 h-5 text-indigo-400" title="Área Restrita" />
+            Gestão de Pessoal <ShieldAlert className="h-4 w-4 text-amber-500" aria-label="Permissões de acesso não definidas. Contate o suporte." />
           </h1>
           <p className="text-slate-400 mt-1">Cadastro e contratos da equipe operacional e administrativa.</p>
         </div>
