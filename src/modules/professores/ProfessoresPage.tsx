@@ -7,7 +7,7 @@ import { ExportButton } from '@/components/shared/ExportButton';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Edit2, Ban, CheckCircle2, Upload } from 'lucide-react';
+import { Plus, Search, Edit2, Ban, CheckCircle2, Upload, Instagram } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import {
@@ -25,7 +25,7 @@ import type { Database } from '@/types/database';
 type Professor = Database['public']['Tables']['professores']['Row'];
 
 export default function ProfessoresPage() {
-  const { professores, loading, error, create, update, toggleAtivo, insertMany } = useProfessores();
+  const { professores, loading, error, create, update, toggleAtivo, insertMany, uploadFoto } = useProfessores();
   const { role } = useAuth();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -95,13 +95,22 @@ export default function ProfessoresPage() {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: any, file?: File) => {
+    let professorId = editingProfessor?.id;
     if (editingProfessor) {
       await update(editingProfessor.id, data);
     } else {
-      await create(data);
+      const created = await create(data);
+      professorId = created?.id;
+    }
+
+    if (file && professorId) {
+      const foto_url = await uploadFoto(professorId, file);
+      await update(professorId, { foto_url });
     }
   };
+
+  const getInitials = (nome: string) => nome ? nome.substring(0, 2).toUpperCase() : 'PR';
 
   const handleToggleStatus = async (professor: Professor) => {
     const isDesativando = professor.ativo;
@@ -210,7 +219,23 @@ export default function ProfessoresPage() {
               filteredProfessores.map((professor) => (
                 <TableRow key={professor.id} className="border-slate-800 hover:bg-slate-900/50">
                   <TableCell className="font-medium text-slate-200">
-                    {professor.nome}
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
+                        {professor.foto_url
+                          ? <img src={professor.foto_url} className="w-full h-full object-cover" />
+                          : <span className="text-xs font-bold text-slate-400 flex items-center justify-center h-full">{getInitials(professor.nome)}</span>
+                        }
+                      </div>
+                      <div>
+                        <div className="font-medium text-slate-200">{professor.nome}</div>
+                        {professor.instagram_handle && (
+                          <a href={`https://instagram.com/${professor.instagram_handle}`}
+                             target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:underline flex items-center gap-1 mt-0.5">
+                            <Instagram className="w-3 h-3" /> @{professor.instagram_handle}
+                          </a>
+                        )}
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell className="text-slate-400">
                     <div className="flex flex-col gap-1 text-xs">

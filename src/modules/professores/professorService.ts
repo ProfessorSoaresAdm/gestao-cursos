@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/types/database';
+import { resizeImage } from '@/lib/imageUtils';
 
 type ProfessorRow = Database['public']['Tables']['professores']['Row'];
 type ProfessorInsert = Database['public']['Tables']['professores']['Insert'];
@@ -69,5 +70,26 @@ export const professorService = {
       .eq('id', id);
       
     if (error) throw new Error(`Erro ao alterar status: ${error.message}`);
+  },
+
+  async uploadFoto(professorId: string, file: File): Promise<string> {
+    // Validar tipo e tamanho
+    const allowed = ['image/jpeg','image/png','image/webp'];
+    if (!allowed.includes(file.type))
+      throw new Error('Formato invalido. Use JPG, PNG ou WebP.');
+    if (file.size > 2 * 1024 * 1024)
+      throw new Error('Imagem muito grande. Maximo: 2MB.');
+ 
+    // Redimensionar para max 400x400 via canvas
+    const resized = await resizeImage(file, 400, 400);
+ 
+    const path = `${professorId}/foto.webp`;
+    const { error } = await supabase.storage.from('professores-fotos')
+      .upload(path, resized, { upsert: true, contentType: 'image/webp' });
+    if (error) throw new Error(`Erro no upload: ${error.message}`);
+ 
+    const { data } = supabase.storage.from('professores-fotos')
+      .getPublicUrl(path);
+    return data.publicUrl;
   }
 };

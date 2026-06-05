@@ -21,9 +21,10 @@ const schema = z.object({
   data_hora: z.string().min(1, 'Data e Hora são obrigatórias'),
   duracao_minutos: z.coerce.number().min(1, 'Duração deve ser maior que 0'),
   link_transmissao: z.string().optional().nullable(),
-  status: z.enum(['agendada', 'realizada', 'cancelada', 'reagendada', 'em_andamento']).default('agendada'),
+  status: z.enum(['agendada', 'realizada', 'cancelada', 'reagendada', 'em_andamento', 'confirmada', 'material_enviado', 'material_postado', 'aula_postada']).default('agendada'),
   gravacao_url: z.string().optional().nullable(),
   observacoes: z.string().optional().nullable(),
+  monitor_id: z.string().uuid().optional().nullable().or(z.literal('')),
 });
 
 type FormData = z.input<typeof schema>;
@@ -53,6 +54,7 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
       status: 'agendada',
       gravacao_url: '',
       observacoes: '',
+      monitor_id: '',
     }
   });
 
@@ -73,6 +75,7 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
           status: (aula.status as FormData['status']) || 'agendada',
           gravacao_url: aula.gravacao_url || '',
           observacoes: aula.observacoes || '',
+          monitor_id: aula.monitor_id || '',
         });
       } else {
         reset({
@@ -84,6 +87,7 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
           status: 'agendada',
           gravacao_url: '',
           observacoes: '',
+          monitor_id: '',
         });
       }
     }
@@ -178,6 +182,10 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
                 <option value="realizada">Realizada</option>
                 <option value="cancelada">Cancelada</option>
                 <option value="reagendada">Reagendada</option>
+                <option value="confirmada">Confirmada</option>
+                <option value="material_enviado">Material Enviado</option>
+                <option value="material_postado">Material Postado</option>
+                <option value="aula_postada">Aula Postada</option>
               </select>
             </div>
             <div className="space-y-2">

@@ -5,10 +5,11 @@ type AulaRow = Database['public']['Tables']['aulas']['Row'];
 type AulaInsert = Database['public']['Tables']['aulas']['Insert'];
 type AulaUpdate = Database['public']['Tables']['aulas']['Update'];
 
-// Type extended with the joined professor name
 export type AulaWithProfessor = AulaRow & {
   professores?: {
     nome: string;
+    foto_url: string | null;
+    instagram_handle: string | null;
   } | null;
 };
 
@@ -19,7 +20,9 @@ export const aulaService = {
       .select(`
         *,
         professores (
-          nome
+          nome,
+          foto_url,
+          instagram_handle
         )
       `)
       .order('data_hora', { ascending: false });
@@ -34,7 +37,9 @@ export const aulaService = {
       .select(`
         *,
         professores (
-          nome
+          nome,
+          foto_url,
+          instagram_handle
         )
       `)
       .eq('id', id)

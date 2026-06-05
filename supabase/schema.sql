@@ -97,6 +97,10 @@ CREATE TABLE IF NOT EXISTS professores (
   estado        TEXT,
   endereco      TEXT,
   observacoes   TEXT,
+  instagram_handle TEXT,
+  foto_url      TEXT,
+  pix_tipo      TEXT        CHECK (pix_tipo IN ('cpf','cnpj','email','telefone','aleatoria') OR pix_tipo IS NULL),
+  pix_chave     TEXT,
   ativo         BOOLEAN     NOT NULL DEFAULT true,
   criado_em     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -131,13 +135,14 @@ CREATE POLICY professores_write ON professores
 CREATE TABLE IF NOT EXISTS aulas (
   id                UUID        NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   professor_id      UUID        REFERENCES professores(id) ON DELETE SET NULL,
+  monitor_id        UUID        REFERENCES auth.users(id) ON DELETE SET NULL,
   titulo            TEXT        NOT NULL,
   descricao         TEXT,
   data_hora         TIMESTAMPTZ NOT NULL,
   duracao_minutos   INTEGER     NOT NULL DEFAULT 60,
   link_transmissao  TEXT,
   status            TEXT        NOT NULL DEFAULT 'agendada'
-                                CHECK (status IN ('agendada', 'realizada', 'cancelada')),
+                                CHECK (status IN ('agendada', 'realizada', 'cancelada', 'reagendada', 'em_andamento', 'confirmada', 'material_enviado', 'material_postado', 'aula_postada')),
   gravacao_url      TEXT,       -- preenchido apenas quando status = 'realizada'
   observacoes       TEXT,
   criado_em         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -151,6 +156,7 @@ CREATE TRIGGER trg_aulas_atualizado_em
 CREATE INDEX IF NOT EXISTS idx_aulas_professor ON aulas (professor_id);
 CREATE INDEX IF NOT EXISTS idx_aulas_data     ON aulas (data_hora);
 CREATE INDEX IF NOT EXISTS idx_aulas_status   ON aulas (status);
+CREATE INDEX IF NOT EXISTS idx_aulas_monitor ON aulas (monitor_id);
 
 ALTER TABLE aulas ENABLE ROW LEVEL SECURITY;
 

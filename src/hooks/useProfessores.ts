@@ -43,9 +43,15 @@ export function useProfessores() {
     onSuccess: invalidate,
   });
 
+  const uploadFotoMutation = useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) =>
+      professorService.uploadFoto(id, file),
+    onSuccess: invalidate,
+  });
+
   // Interface pública idêntica ao hook anterior
   const create = async (data: Omit<ProfessorInsert, 'id' | 'criado_em' | 'atualizado_em'>) => {
-    await createMutation.mutateAsync(data);
+    return await createMutation.mutateAsync(data);
   };
 
   const insertMany = async (data: Omit<ProfessorInsert, 'id' | 'criado_em' | 'atualizado_em'>[]) => {
@@ -60,6 +66,10 @@ export function useProfessores() {
     await toggleAtivoMutation.mutateAsync({ id, statusAtual });
   };
 
+  const uploadFoto = async (id: string, file: File) => {
+    return await uploadFotoMutation.mutateAsync({ id, file });
+  };
+
   const fetchAll = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
 
   return {
@@ -71,5 +81,6 @@ export function useProfessores() {
     insertMany,
     update,
     toggleAtivo,
+    uploadFoto,
   };
 }

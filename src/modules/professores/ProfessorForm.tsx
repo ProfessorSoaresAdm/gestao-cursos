@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Upload, Instagram } from 'lucide-react';
 import type { Database } from '@/types/database';
 
 type Professor = Database['public']['Tables']['professores']['Row'];
@@ -28,6 +28,8 @@ const schema = z.object({
   cidade: z.string().optional().nullable(),
   estado: z.string().optional().nullable(),
   observacoes: z.string().optional().nullable(),
+  instagram_handle: z.string().regex(/^[a-zA-Z0-9_.]{1,30}$/, 'Handle inválido').or(z.literal('')).optional().transform(v => v === '' ? null : v),
+  foto_url: z.string().url().optional().nullable(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -36,11 +38,14 @@ interface ProfessorFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   professor?: Professor | null;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: any, file?: File) => Promise<void>;
 }
 
 export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: ProfessorFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fotoFile, setFotoFile] = useState<File | undefined>(undefined);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -59,8 +64,12 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
       cidade: '',
       estado: '',
       observacoes: '',
+      instagram_handle: '',
+      foto_url: '',
     }
   });
+
+  const watchHandle = watch('instagram_handle');
 
   useEffect(() => {
     if (open) {
@@ -80,7 +89,10 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
           cidade: professor.cidade || '',
           estado: professor.estado || '',
           observacoes: professor.observacoes || '',
+          instagram_handle: professor.instagram_handle || '',
+          foto_url: professor.foto_url || '',
         });
+        setFotoPreview(professor.foto_url || null);
       } else {
         reset({
           nome: '',
@@ -97,8 +109,12 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
           cidade: '',
           estado: '',
           observacoes: '',
+          instagram_handle: '',
+          foto_url: '',
         });
+        setFotoPreview(null);
       }
+      setFotoFile(undefined);
     }
   }, [open, professor, reset]);
 
@@ -125,10 +141,20 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
     }
   }, [cepValue, setValue]);
 
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFotoFile(file);
+      setFotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const initials = watch('nome') ? watch('nome').substring(0, 2).toUpperCase() : 'PR';
+
   const handleFormSubmit = async (data: FormData) => {
     try {
       setIsSubmitting(true);
-      await onSubmit(data);
+      await onSubmit(data, fotoFile);
       toast.success(professor ? 'Professor atualizado com sucesso!' : 'Professor cadastrado com sucesso!');
       onOpenChange(false);
     } catch (error: any) {
@@ -165,6 +191,45 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
             <div className="space-y-2">
               <Label htmlFor="telefone">Telefone</Label>
               <Input id="telefone" {...register('telefone')} placeholder="Ex: (11) 99999-9999" className="bg-slate-900 border-slate-800" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>@ Instagram</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 text-sm">instagram.com/</span>
+                <Input {...register("instagram_handle")}
+                  placeholder="profsoares"
+                  className="bg-slate-900 border-slate-800" />
+              </div>
+              {watchHandle && (
+                <a href={`https://instagram.com/${watchHandle}`} target="_blank"
+                   className="text-xs text-indigo-400 hover:underline flex items-center gap-1">
+                  <Instagram className="w-3 h-3" /> Ver perfil no Instagram
+                </a>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Foto de Perfil</Label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                  {fotoPreview
+                    ? <img src={fotoPreview} className="w-full h-full object-cover" />
+                    : <span className="text-slate-400 text-xl font-bold">{initials}</span>}
+                </div>
+                <div className="flex-1">
+                  <input type="file" accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFotoChange} className="hidden" ref={fileInputRef} />
+                  <Button type="button" variant="outline" size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-slate-700 text-slate-300">
+                    <Upload className="w-4 h-4 mr-2" /> Selecionar foto
+                  </Button>
+                  <p className="text-xs text-slate-500 mt-1">JPG, PNG ou WebP. Max 2MB.</p>
+                </div>
+              </div>
             </div>
           </div>
 
