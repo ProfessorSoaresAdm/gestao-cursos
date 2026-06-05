@@ -38,7 +38,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     const currentScreen = location.pathname.split('/')[1];
     
     // Lista de rotas válidas que requerem verificação no array de permissões
-    const restrictedScreens = ['dashboard', 'aulas', 'pagamentos', 'professores', 'pessoal', 'usuarios', 'backup'];
+    const restrictedScreens = ['dashboard', 'aulas', 'pagamentos', 'professores', 'pessoal', 'usuarios', 'backup', 'relatorios'];
     
     if (restrictedScreens.includes(currentScreen) && !telasAcesso.includes(currentScreen)) {
       if (telasAcesso.length > 0) {

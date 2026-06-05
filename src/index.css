@@ -294,7 +294,40 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@media print {
+  /* Ocultar tudo que não é o relatório */
+  nav, aside, header, [data-sidebar], [data-header],
+  .no-print, button { display: none !important; }
+
+  /* Área de impressão ocupa a página inteira */
+  .print-area {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    padding: 24px;
+    font-size: 12px;
+    color: #000;
+    background: #fff;
+  }
+
+  /* Garantir que tabelas não quebrem no meio de uma linha */
+  table { page-break-inside: auto; }
+  tr    { page-break-inside: avoid; page-break-after: auto; }
+
+  /* Rodapé de impressão */
+  .print-footer::after {
+    content: "Sistema de Gestão Escolar — Gerado em " attr(data-date);
+    display: block;
+    margin-top: 24px;
+    font-size: 10px;
+    color: #666;
+    border-top: 1px solid #ccc;
+    padding-top: 8px;
+  }
+}
+
   html {
     @apply font-sans;
   }
-}

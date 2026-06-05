@@ -34,6 +34,7 @@ const TELAS_DISPONIVEIS = [
   { id: 'pessoal', label: 'Pessoal' },
   { id: 'usuarios', label: 'Usuários' },
   { id: 'backup', label: 'Backups' },
+  { id: 'relatorios', label: 'Relatórios' },
 ];
 
 export default function UsuariosPage() {
