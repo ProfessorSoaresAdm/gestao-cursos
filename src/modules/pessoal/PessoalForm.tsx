@@ -80,8 +80,8 @@ interface PessoalFormProps {
 export function PessoalForm({ open, onOpenChange, funcionario, onSubmit }: PessoalFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, reset, watch, control, setValue, formState: { errors } } = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema) as any,
+  const { register, handleSubmit, reset, watch, control, setValue, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
       nome: '',
       cargo: '',

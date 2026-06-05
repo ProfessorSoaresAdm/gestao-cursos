@@ -77,8 +77,8 @@ export function PagamentoForm({ open, onOpenChange, pagamento, onSubmit }: Pagam
   
   const professoresAtivos = professores.filter(p => p.ativo);
 
-  const { register, handleSubmit, reset, watch, control, setValue, formState: { errors } } = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema) as any,
+  const { register, handleSubmit, reset, watch, control, setValue, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
     defaultValues: {
       descricao: '',
       professor_id: '',

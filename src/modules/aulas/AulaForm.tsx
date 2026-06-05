@@ -21,12 +21,12 @@ const schema = z.object({
   data_hora: z.string().min(1, 'Data e Hora são obrigatórias'),
   duracao_minutos: z.coerce.number().min(1, 'Duração deve ser maior que 0'),
   link_transmissao: z.string().optional().nullable(),
-  status: z.enum(['agendada', 'realizada', 'cancelada']).default('agendada'),
+  status: z.enum(['agendada', 'realizada', 'cancelada', 'reagendada', 'em_andamento']).default('agendada'),
   gravacao_url: z.string().optional().nullable(),
   observacoes: z.string().optional().nullable(),
 });
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.input<typeof schema>;
 
 interface AulaFormProps {
   open: boolean;
@@ -43,7 +43,7 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
   const professoresAtivos = professores.filter(p => p.ativo);
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema) as any,
+    resolver: zodResolver(schema),
     defaultValues: {
       titulo: '',
       professor_id: '',
@@ -70,7 +70,7 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
           data_hora: dataLocal,
           duracao_minutos: aula.duracao_minutos,
           link_transmissao: aula.link_transmissao || '',
-          status: aula.status as any,
+          status: (aula.status as FormData['status']) || 'agendada',
           gravacao_url: aula.gravacao_url || '',
           observacoes: aula.observacoes || '',
         });
@@ -174,8 +174,10 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
                 className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-slate-200"
               >
                 <option value="agendada">Agendada</option>
+                <option value="em_andamento">Em Andamento</option>
                 <option value="realizada">Realizada</option>
                 <option value="cancelada">Cancelada</option>
+                <option value="reagendada">Reagendada</option>
               </select>
             </div>
             <div className="space-y-2">
