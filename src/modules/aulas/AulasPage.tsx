@@ -25,6 +25,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { AulaWithProfessor } from './aulaService';
+import { getNomeMonitor } from './aulaService';
+import { useMonitores } from '@/hooks/useMonitores';
 
 export default function AulasPage() {
   const { aulas, loading, error, create, update, updateStatus, insertMany } = useAulas();
@@ -34,6 +36,7 @@ export default function AulasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [professorFilter, setProfessorFilter] = useState<string>('todos');
+  const [monitorFilter, setMonitorFilter] = useState<string>('todos');
   const [mesFilter, setMesFilter] = useState<string>(''); // Formato YYYY-MM
   
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -63,9 +66,11 @@ export default function AulasPage() {
         matchMes = aulaDate.getFullYear() === parseInt(year) && aulaDate.getMonth() === (parseInt(month) - 1);
       }
 
-      return matchTitle && matchStatus && matchProfessor && matchMes;
+      return matchTitle && matchStatus && matchProfessor && matchMonitor && matchMes;
     });
-  }, [aulas, searchTerm, statusFilter, professorFilter, mesFilter]);
+  }, [aulas, searchTerm, statusFilter, professorFilter, monitorFilter, mesFilter]);
+
+  const { monitores } = useMonitores();
 
   const handleOpenCreate = () => {
     setEditingAula(null);
@@ -153,6 +158,7 @@ export default function AulasPage() {
   const exportColumns = [
     { key: 'titulo', label: 'Título' },
     { key: 'professores.nome', label: 'Professor', format: (val: any) => val || 'Sem professor' },
+    { key: 'monitor', label: 'Monitor', format: (val: any, row: AulaWithProfessor) => getNomeMonitor(row) },
     { key: 'data_hora', label: 'Data', format: (val: any) => val ? format(new Date(val), 'dd/MM/yyyy') : '' },
     { key: 'data_hora', label: 'Hora', format: (val: any) => val ? format(new Date(val), 'HH:mm') : '' },
     { key: 'duracao_minutos', label: 'Duração', format: (val: any) => `${val} min` },
@@ -229,6 +235,17 @@ export default function AulasPage() {
           ))}
         </select>
 
+        <select 
+          value={monitorFilter}
+          onChange={(e) => setMonitorFilter(e.target.value)}
+          className="h-10 px-3 py-2 rounded-md bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-48"
+        >
+          <option value="todos">Todos os Monitores</option>
+          {monitores.map(m => (
+            <option key={m.id} value={m.id}>{m.nome || "Monitor"}</option>
+          ))}
+        </select>
+
         <Input 
           type="month"
           value={mesFilter}
@@ -254,6 +271,7 @@ export default function AulasPage() {
             <TableRow className="border-slate-800 hover:bg-slate-900/80">
               <TableHead className="text-slate-400">Título / Data</TableHead>
               <TableHead className="text-slate-400">Professor</TableHead>
+              <TableHead className="text-slate-400">Monitor</TableHead>
               <TableHead className="text-slate-400">Status</TableHead>
               {canWrite && <TableHead className="text-slate-400 text-right">Ações</TableHead>}
             </TableRow>
@@ -261,7 +279,7 @@ export default function AulasPage() {
           <TableBody className="bg-slate-950">
             {filteredAulas.length === 0 ? (
               <TableRow className="border-slate-800 hover:bg-slate-900/50">
-                <TableCell colSpan={canWrite ? 4 : 3} className="h-24 text-center text-slate-500">
+                <TableCell colSpan={canWrite ? 5 : 4} className="h-24 text-center text-slate-500">
                   Nenhuma aula encontrada.
                 </TableCell>
               </TableRow>
@@ -279,6 +297,9 @@ export default function AulasPage() {
                     </TableCell>
                     <TableCell className="text-slate-300">
                       {aula.professores?.nome || <span className="text-slate-500 italic">Sem professor</span>}
+                    </TableCell>
+                    <TableCell className="text-slate-300 text-sm">
+                      {getNomeMonitor(aula)}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={aula.status} />

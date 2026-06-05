@@ -11,7 +11,14 @@ export type AulaWithProfessor = AulaRow & {
     foto_url: string | null;
     instagram_handle: string | null;
   } | null;
+  monitor?: {
+    id: string;
+    nome: string;
+  } | null;
 };
+
+export const getNomeMonitor = (aula: AulaWithProfessor): string =>
+  aula.monitor?.nome ?? 'Sem monitor';
 
 export const aulaService = {
   async getAll(): Promise<AulaWithProfessor[]> {
@@ -23,6 +30,10 @@ export const aulaService = {
           nome,
           foto_url,
           instagram_handle
+        ),
+        monitor:profiles!monitor_id (
+          id,
+          nome
         )
       `)
       .order('data_hora', { ascending: false });
@@ -40,6 +51,10 @@ export const aulaService = {
           nome,
           foto_url,
           instagram_handle
+        ),
+        monitor:profiles!monitor_id (
+          id,
+          nome
         )
       `)
       .eq('id', id)

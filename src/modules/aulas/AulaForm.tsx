@@ -12,6 +12,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/types/database';
 import { useProfessores } from '@/hooks/useProfessores';
+import { useMonitores } from '@/hooks/useMonitores';
 import { AULA_STATUS } from '@/types/aulaStatus';
 
 type AulaRow = Database['public']['Tables']['aulas']['Row'];
@@ -40,6 +41,7 @@ interface AulaFormProps {
 export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { professores } = useProfessores();
+  const { monitores } = useMonitores();
   
   // Filtramos apenas professores ativos para o formulário
   const professoresAtivos = professores.filter(p => p.ativo);
@@ -155,6 +157,21 @@ export function AulaForm({ open, onOpenChange, aula, onSubmit }: AulaFormProps) 
               )}
             </select>
             {errors.professor_id && <p className="text-sm text-red-500">{errors.professor_id.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="monitor_id">Monitor da Aula</Label>
+            <select 
+              id="monitor_id" 
+              {...register('monitor_id')}
+              className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-200"
+            >
+              <option value="">Sem monitor</option>
+              {monitores.map(m => (
+                <option key={m.id} value={m.id}>{m.nome}</option>
+              ))}
+            </select>
+            {errors.monitor_id && <p className="text-sm text-red-500">{errors.monitor_id.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
