@@ -8,8 +8,6 @@ coverage/
 !.env.example
 ATUALIZACOES.md
 AGENTS.md
-aulas.csv
-professores.csv
 docs/
 mesa-de-trabalho/
 referencia-stitch/
