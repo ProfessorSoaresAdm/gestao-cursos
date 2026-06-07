@@ -26,7 +26,7 @@ const schema = z.object({
   status: z.enum(['agendada','confirmada','material_enviado','material_postado','aula_postada','cancelada','realizada','reagendada','em_andamento']).default('agendada'),
   gravacao_url: z.string().optional().nullable(),
   observacoes: z.string().optional().nullable(),
-  monitor_id: z.string().uuid().optional().nullable().or(z.literal('')),
+  monitor_id: z.string().uuid('UUID inválido').nullable().or(z.literal('')).optional().transform(v => (v === '' || v === undefined) ? null : v),
 });
 
 type FormData = z.input<typeof schema>;
