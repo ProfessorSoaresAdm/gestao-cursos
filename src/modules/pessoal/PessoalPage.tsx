@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit2, ShieldAlert, Power, Upload, MessageCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { maskTelefone } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -277,7 +278,11 @@ export default function PessoalPage() {
                   </TableCell>
                   <TableCell className="text-slate-400">
                     <div className="flex flex-col gap-1 text-xs">
-                      {funcionario.email && <span>{funcionario.email}</span>}
+                      {funcionario.email && (
+                        <a href={`mailto:${funcionario.email}`} className="truncate text-indigo-400 hover:underline" title={funcionario.email}>
+                          {funcionario.email}
+                        </a>
+                      )}
                       {funcionario.telefone && (
                         funcionario.is_whatsapp ? (
                           <a 
@@ -288,10 +293,10 @@ export default function PessoalPage() {
                             title="Conversar no WhatsApp"
                           >
                             <MessageCircle className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{funcionario.telefone}</span>
+                            <span className="truncate">{maskTelefone(funcionario.telefone)}</span>
                           </a>
                         ) : (
-                          <span className="truncate">{funcionario.telefone}</span>
+                          <span className="truncate">{maskTelefone(funcionario.telefone)}</span>
                         )
                       )}
                       {!funcionario.email && !funcionario.telefone && <span className="text-slate-600">-</span>}

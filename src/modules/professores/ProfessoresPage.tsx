@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search, Edit2, Ban, CheckCircle2, Upload, Instagram, QrCode, MessageCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
+import { maskTelefone } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -242,7 +243,11 @@ export default function ProfessoresPage() {
                   </TableCell>
                   <TableCell className="text-slate-400">
                     <div className="flex flex-col gap-1 text-xs min-w-0">
-                      {professor.email && <span className="truncate" title={professor.email}>{professor.email}</span>}
+                      {professor.email && (
+                        <a href={`mailto:${professor.email}`} className="truncate text-indigo-400 hover:underline" title={professor.email}>
+                          {professor.email}
+                        </a>
+                      )}
                       {professor.telefone && (
                         professor.is_whatsapp ? (
                           <a 
@@ -253,10 +258,10 @@ export default function ProfessoresPage() {
                             title="Conversar no WhatsApp"
                           >
                             <MessageCircle className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{professor.telefone}</span>
+                            <span className="truncate">{maskTelefone(professor.telefone)}</span>
                           </a>
                         ) : (
-                          <span className="truncate">{professor.telefone}</span>
+                          <span className="truncate">{maskTelefone(professor.telefone)}</span>
                         )
                       )}
                       {!professor.email && !professor.telefone && <span className="text-slate-600">-</span>}
