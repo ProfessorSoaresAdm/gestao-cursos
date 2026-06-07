@@ -96,7 +96,7 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
           observacoes: professor.observacoes || '',
           instagram_handle: professor.instagram_handle || '',
           foto_url: professor.foto_url || '',
-          pix_tipo: (professor.pix_tipo as any) || null,
+          pix_tipo: (professor.pix_tipo as any) || '',
           pix_chave: professor.pix_chave || '',
         });
         setFotoPreview(professor.foto_url || null);
@@ -118,7 +118,7 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
           observacoes: '',
           instagram_handle: '',
           foto_url: '',
-          pix_tipo: null,
+          pix_tipo: '',
           pix_chave: '',
         });
         setFotoPreview(null);
@@ -224,6 +224,7 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
                   <Instagram className="w-3 h-3" /> Ver perfil no Instagram
                 </a>
               )}
+              {errors.instagram_handle && <p className="text-sm text-red-500">{errors.instagram_handle.message}</p>}
             </div>
             
             <div className="space-y-2">
@@ -316,6 +317,9 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
                   <option value="telefone">Telefone</option>
                   <option value="aleatoria">Chave Aleatória</option>
                 </select>
+                {errors.pix_tipo && (
+                  <p className="text-xs text-red-500">{errors.pix_tipo.message as string}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Chave PIX</Label>
