@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { Upload, Instagram, QrCode } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Database } from '@/types/database';
-import { isValidCPF, maskCPF } from '@/lib/utils';
+import { isValidCPF, maskCPF, maskCEP } from '@/lib/utils';
 
 type Professor = Database['public']['Tables']['professores']['Row'];
 
@@ -189,9 +190,7 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
       ? (Object.values(formErrors)[0] as any).message 
       : "Algum campo preenchido está inválido";
       
-    import('sonner').then(({ toast }) => {
-      toast.error(`Não foi possível salvar: ${firstErrorMsg}`);
-    });
+    toast.error(`Não foi possível salvar: ${firstErrorMsg}`);
   };
 
   return (
@@ -298,7 +297,11 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cep">CEP</Label>
-                <Input id="cep" {...register('cep')} placeholder="00000-000" className="bg-slate-950 border-slate-800" maxLength={9} />
+                <Input id="cep" {...register('cep', {
+                  onChange: (e) => {
+                    e.target.value = maskCEP(e.target.value);
+                  }
+                })} placeholder="00000-000" className="bg-slate-950 border-slate-800" maxLength={9} />
               </div>
               <div className="space-y-2 col-span-2">
                 <Label htmlFor="logradouro">Logradouro</Label>
