@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import { Upload, Instagram, QrCode } from 'lucide-react';
 import type { Database } from '@/types/database';
+import { isValidCPF, maskCPF } from '@/lib/utils';
 
 type Professor = Database['public']['Tables']['professores']['Row'];
 
@@ -18,7 +19,7 @@ const schema = z.object({
   email: z.preprocess(v => (typeof v === 'string' ? v.trim() : v), z.union([z.string().email('E-mail inválido'), z.literal('')]).nullable().optional().transform(v => (!v || v === '') ? null : v)),
   telefone: z.string().optional().nullable(),
   especialidade: z.string().optional().nullable(),
-  documento: z.string().optional().nullable(),
+  documento: z.preprocess(v => (typeof v === 'string' ? v.trim() : v), z.string().nullable().optional().transform(v => (!v || v === '') ? null : v).refine(v => v === null || isValidCPF(v), 'CPF inválido')),
   endereco: z.string().optional().nullable(),
   cep: z.string().optional().nullable(),
   logradouro: z.string().optional().nullable(),
@@ -282,7 +283,12 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
             </div>
             <div className="space-y-2">
               <Label htmlFor="documento">Documento (CPF)</Label>
-              <Input id="documento" {...register('documento')} placeholder="000.000.000-00" className="bg-slate-900 border-slate-800" />
+              <Input id="documento" {...register('documento', {
+                onChange: (e) => {
+                  e.target.value = maskCPF(e.target.value);
+                }
+              })} placeholder="000.000.000-00" className="bg-slate-900 border-slate-800" />
+              {errors.documento && <p className="text-sm text-red-500">{errors.documento.message}</p>}
             </div>
           </div>
 
