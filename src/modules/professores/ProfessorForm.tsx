@@ -238,11 +238,24 @@ export function ProfessorForm({ open, onOpenChange, professor, onSubmit }: Profe
                 <div className="flex-1">
                   <input type="file" accept="image/jpeg,image/png,image/webp"
                     onChange={handleFotoChange} className="hidden" ref={fileInputRef} />
-                  <Button type="button" variant="outline" size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-slate-700 text-slate-300">
-                    <Upload className="w-4 h-4 mr-2" /> Selecionar foto
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="outline" size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-slate-700 text-slate-300">
+                      <Upload className="w-4 h-4 mr-2" /> Selecionar foto
+                    </Button>
+                    {fotoPreview && (
+                      <Button type="button" variant="ghost" size="sm"
+                        onClick={() => {
+                          setFotoFile(undefined);
+                          setFotoPreview(null);
+                          setValue('foto_url', '', { shouldValidate: true, shouldDirty: true });
+                        }}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                        Remover
+                      </Button>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 mt-1">JPG, PNG ou WebP. Max 2MB.</p>
                 </div>
               </div>
