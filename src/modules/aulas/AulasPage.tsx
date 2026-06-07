@@ -71,6 +71,8 @@ export default function AulasPage() {
 
       const matchDia = diaSemanaFilter === 'todos' || getDay(new Date(a.data_hora)) === diaSemanaFilter;
 
+      const matchMonitor = monitorFilter === 'todos' || a.monitor_id === monitorFilter;
+
       return matchTitle && matchStatus && matchProfessor && matchMonitor && matchMes && matchDia;
     });
   }, [aulas, searchTerm, statusFilter, professorFilter, monitorFilter, mesFilter, diaSemanaFilter]);
